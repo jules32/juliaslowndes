@@ -12,34 +12,31 @@ weight = 1
 # List your academic interests.
 [interests]
   interests = [
-    "Education",
-    "R",
-    "Statistics",
-    "Natural Language Processing",
-    "Computational Behavioral Science"
+    "environmental science",
+    "marine science",
+    "open science",
+    "data science",
+    "#rstats"
   ]
 
 # List your qualifications (such as academic degrees).
 [[education.courses]]
-  course = "PhD in Developmental Psychology & Quantitative Methods"
-  institution = "Vanderbilt University"
-  year = 2008
+  course = "PhD in Biology"
+  institution = "Stanford University"
+  year = 2012
 
 [[education.courses]]
-  course = "MSc in Developmental Psychology"
-  institution = "Vanderbilt University"
-  year = 2005
-
-[[education.courses]]
-  course = "BSc in Applied Psychology"
-  institution = "Georgia Institute of Technology"
-  year = 2002
+  course = "BSc in Marine Biology"
+  institution = "University of California at Los Angeles"
+  year = 2004
  
 +++
 
 # About me
 
-I am an Associate Professor of Pediatrics at <a href = "https://www.ohsu.edu">Oregon Health & Science University (OHSU)</a> in Portland, Oregon, and the Assistant Director of OHSU's <a href = "https://www.ohsu.edu/xd/research/centers-institutes/center-for-spoken-language-understanding/" target = "_blank">Center for Spoken Language Understanding</a>, home to the Computer Science graduate education program. I study health-related applications of Natural Language Processing-based methods, with a focus on pediatric populations with developmental disabilities like Autism Spectrum Disorders, which I've studied for the past 15 years.
+Hi, I'm Julia, or Julie, or Jules.
 
-In addition to research, I teach graduate-level data science courses and lead workshops on statistics, data analysis, and data visualization using the statistical programming language R. I am also a co-author of the book [*blogdown: Creating Websites with R Markdown*](https://bookdown.org/yihui/blogdown/), and I am the author of the DataCamp.com course [*Working with Data in the Tidyverse*](https://www.datacamp.com/courses/working-with-data-in-the-tidyverse). 
+I am a Mozilla Fellow and marine data scientist at the National Center for Ecological Analysis and Synthesis (NCEAS). As Science Program Lead for the Ocean Health Index (OHI), I work to bridge marine science, data science, open science, and management. 
+
+I lead open data science trainings through NCEAS, Software Carpentry, RLadies, and Eco-Data-Science. I earned my PhD from Stanford University in 2012.
 

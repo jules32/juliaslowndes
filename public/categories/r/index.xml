@@ -7,38 +7,10 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2017 Alison Presmanes Hill</copyright>
-    <lastBuildDate>Sun, 08 Jul 2018 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 Dec 2017 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>Read data with multiple header rows into R</title>
-      <link>/post/read-multiple-header-rows/</link>
-      <pubDate>Sun, 08 Jul 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/post/read-multiple-header-rows/</guid>
-      <description>A problem I run up against a lot when working with other people’s data is having multiple header rows in the source data file. I like to use readr functions to read in rectangular data like .csv and .tsv files, but if you skip rows at import using the skip argument, you lose the header row as well, which usually has column names. The problem I often have is that the header row has column names that I want to keep, but I’d like to skip the second row (or more), which has some junk in it.</description>
-    </item>
-    
-    <item>
-      <title>Big Magic with R - Ingredient 2: Enchantment</title>
-      <link>/post/bigmagic-enchantment/</link>
-      <pubDate>Tue, 05 Jun 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/post/bigmagic-enchantment/</guid>
-      <description>“I do think that just because something is mystical doesn’t mean it shouldn’t also be demystified.” – Elizabeth Gilbert
- Last week, I presented a keynote at the Cascadia 2018 R Conference called “Big Magic with R: Creative Learning Beyond Fear”. In it, I talked about learning R- whether you are a beginner and just started to learn R, or whether you are an advanced user and need to learn new things in R every day.</description>
-    </item>
-    
-    <item>
-      <title>Big Magic with R - Ingredient 1: Courage</title>
-      <link>/post/bigmagic-courage/</link>
-      <pubDate>Sun, 03 Jun 2018 00:00:00 +0000</pubDate>
-      
-      <guid>/post/bigmagic-courage/</guid>
-      <description>Creative Learning Beyond Fear Last week, I presented a keynote at the Cascadia 2018 R Conference called “Big Magic with R: Creative Learning Beyond Fear”. For this talk, I was inspired by the book “Big Magic: Creative Living Beyond Fear” by Elizabeth Gilbert. In it, Elizabeth argues that there are five essential ingredients needed to live creatively, and they are: courage, enchantment, permission, persistence, and trust. I argued that these same five essential ingredients are needed to creatively learn R, and I talked about why these elements are also essential for advanced users to take their R skills to the next level.</description>
-    </item>
     
     <item>
       <title>R-Ladies presentation ninja</title>
