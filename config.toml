@@ -20,7 +20,7 @@ defaultContentLanguageInSubdir = false
   hrefTargetBlank = true
 
 [params]
-  name = "Julia Stewart Lowndes"
+  name = "Julia Stewart Lowndes, PhD"
   description = "marine data science"
   role = "Mozilla Fellow, Marine Data Scientist"
   organization = "National Center for Ecological Analysis and Synthesis (NCEAS)"
