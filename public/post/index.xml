@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Alison Presmanes Hill</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on Alison Presmanes Hill</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2017 Alison Presmanes Hill</copyright>
+    <lastBuildDate>Sun, 08 Jul 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Read data with multiple header rows into R</title>
+      <link>/post/read-multiple-header-rows/</link>
+      <pubDate>Sun, 08 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/read-multiple-header-rows/</guid>
+      <description>A problem I run up against a lot when working with other people’s data is having multiple header rows in the source data file. I like to use readr functions to read in rectangular data like .csv and .tsv files, but if you skip rows at import using the skip argument, you lose the header row as well, which usually has column names. The problem I often have is that the header row has column names that I want to keep, but I’d like to skip the second row (or more), which has some junk in it.</description>
+    </item>
+    
+    <item>
+      <title>Making a data package for teaching</title>
+      <link>/post/repro-health/</link>
+      <pubDate>Sun, 01 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/repro-health/</guid>
+      <description>First created a github repo, cloned locally into an R project.
+Create the package # Create a new package ------------------------------------------------- library(usethis) library(here) create_package(here::here()) # could have also used getwd() screenshot here
+ Add dependencies deps &amp;lt;- c(&amp;quot;dplyr&amp;quot;, &amp;quot;tidyr&amp;quot;, &amp;quot;readr&amp;quot;, &amp;quot;stringr&amp;quot;, &amp;quot;janitor&amp;quot;, &amp;quot;purrr&amp;quot;, &amp;quot;ggplot2&amp;quot;, &amp;quot;wbstats&amp;quot;, &amp;quot;gapminder&amp;quot;) library(purrr) walk(deps, usethis::use_package, type = &amp;quot;Suggests&amp;quot;)  Add license use_mit_license(&amp;quot;Alison Hill&amp;quot;)  Updated DESCRIPTION basically copied from jenny’s https://github.com/jennybc/gapminder/blob/master/DESCRIPTION
+ Make and edit news + readme use_news_md() use_readme_rmd()  Make package docs use_package_doc() creates new R script in R folder, just help page for whole package like ?</description>
+    </item>
+    
+    <item>
+      <title>Up and running with usethis</title>
+      <link>/post/data-package/</link>
+      <pubDate>Fri, 29 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/data-package/</guid>
+      <description>1 Who, what, when, where, why, and how 2 Use this now 3 Create the package 4 Add dependencies 5 Update the description 6 Add a license 7 Make news.md + readme.rmd 8 Write package-level docs 9 Write more docs 10 Create package data 11 Use roxygen (move this to earlier after description) 12 Build the package 13 Make a package website 14 Edit your package site 15 Push to GitHub &amp;amp; deploy   1 Who, what, when, where, why, and how A few days weeks months ago, I sat down with Chester Ismay to make a package.</description>
+    </item>
+    
+    <item>
+      <title>Big Magic with R - Ingredient 2: Enchantment</title>
+      <link>/post/bigmagic-enchantment/</link>
+      <pubDate>Tue, 05 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/bigmagic-enchantment/</guid>
+      <description>“I do think that just because something is mystical doesn’t mean it shouldn’t also be demystified.” – Elizabeth Gilbert
+ Last week, I presented a keynote at the Cascadia 2018 R Conference called “Big Magic with R: Creative Learning Beyond Fear”. In it, I talked about learning R- whether you are a beginner and just started to learn R, or whether you are an advanced user and need to learn new things in R every day.</description>
+    </item>
+    
+    <item>
+      <title>Big Magic with R - Ingredient 1: Courage</title>
+      <link>/post/bigmagic-courage/</link>
+      <pubDate>Sun, 03 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/bigmagic-courage/</guid>
+      <description>Creative Learning Beyond Fear Last week, I presented a keynote at the Cascadia 2018 R Conference called “Big Magic with R: Creative Learning Beyond Fear”. For this talk, I was inspired by the book “Big Magic: Creative Living Beyond Fear” by Elizabeth Gilbert. In it, Elizabeth argues that there are five essential ingredients needed to live creatively, and they are: courage, enchantment, permission, persistence, and trust. I argued that these same five essential ingredients are needed to creatively learn R, and I talked about why these elements are also essential for advanced users to take their R skills to the next level.</description>
+    </item>
+    
+    <item>
+      <title>Tame versus Tidy Data</title>
+      <link>/post/tame-data/</link>
+      <pubDate>Tue, 08 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/tame-data/</guid>
+      <description>Define tame data based on: 1. Column types are cast 1. Column names are sane 1. Missing values are NA
+Tame data is a pre-requisite for tidy data. Tame before tidy.</description>
+    </item>
+    
+    <item>
+      <title>Writing A Plot-Through</title>
+      <link>/post/writing-a-plot-through/</link>
+      <pubDate>Tue, 08 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/writing-a-plot-through/</guid>
+      <description>making that one plot taught me a lot ;)</description>
+    </item>
+    
+    <item>
+      <title>Grading Grown-ups</title>
+      <link>/post/self-assessments/</link>
+      <pubDate>Mon, 12 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/self-assessments/</guid>
+      <description>Elaborative interrogation
+ Self-explanation
+ Resources  http://www.indiana.edu/~pcl/rgoldsto/courses/dunloskyimprovinglearning.pdf http://tguilfoyle.cmswiki.wikispaces.net/file/view/What_works,_What_doesn%27t.pdf  My students wanted grades! I tried one year to use a qualitative grading scale, which resulted in mutiny. May be fine for some programs, and seemed to be OK for Ph.D. students (who don’t really care about grades in my experience) but was not OK for masters students. Why not? Possibly because many of my students are adult learners who have had jobs and are returning to school for another degree.</description>
+    </item>
+    
+    <item>
+      <title>R-Ladies presentation ninja</title>
+      <link>/post/r-ladies-slides/</link>
+      <pubDate>Mon, 18 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/r-ladies-slides/</guid>
+      <description>So, you are doing an R-Ladies presentation…that’s awesome! The short version I made an R-Ladies theme for xaringan slides. My original tweet about it:
+if you want to use @xieyihui&amp;#39;s awesome #xaringan package for #rstats slides but want more #Rladies flavor, there is now a built-in theme for that (with code highlighting)! Thanks to the awesome @RLadiesGlobal starter kit. Update the CSS in your YAML to use 🧙🏽‍♀️🧞‍♀️ pic.twitter.com/YnlGSVAMsl
+&amp;mdash; Alison Hill (@apreshill) November 29, 2017  The way to use the theme is to update the YAML like so:</description>
+    </item>
+    
+    <item>
+      <title>Up and running with blogdown</title>
+      <link>/post/up-and-running-with-blogdown/</link>
+      <pubDate>Mon, 12 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/up-and-running-with-blogdown/</guid>
+      <description>1 Read up on blogdown 2 Caveats, disclaimers, etc. 3 In GitHub 4 In terminal 5 In RStudio 6 Build your site in RStudio 7 Deploy in Netlify 8 Going further   1 Read up on blogdown Before you start, I recommend reading the following:
+ blogdown: Creating Websites with R Markdown by Yihui Xie and Amber Thomas Making a Website Using blogdown, Hugo, and GitHub pages also by Amber Thomas Getting Started with blogdown by M.</description>
+    </item>
+    
+  </channel>
+</rss>

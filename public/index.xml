@@ -1,0 +1,1242 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Alison Presmanes Hill on Alison Presmanes Hill</title>
+    <link>/</link>
+    <description>Recent content in Alison Presmanes Hill on Alison Presmanes Hill</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2017 Alison Presmanes Hill</copyright>
+    <lastBuildDate>Wed, 20 Apr 2016 00:00:00 +0000</lastBuildDate>
+    <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Read data with multiple header rows into R</title>
+      <link>/post/read-multiple-header-rows/</link>
+      <pubDate>Sun, 08 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/read-multiple-header-rows/</guid>
+      <description>&lt;p&gt;A problem I run up against a lot when working with other people’s data is having multiple header rows in the source data file. I like to use &lt;code&gt;readr&lt;/code&gt; functions to read in rectangular data like &lt;code&gt;.csv&lt;/code&gt; and &lt;code&gt;.tsv&lt;/code&gt; files, but if you skip rows at import using the &lt;code&gt;skip&lt;/code&gt; argument, you lose the header row as well, which usually has column names. The problem I often have is that the header row has column names that I want to keep, but I’d like to skip the second row (or more), which has some junk in it. Usually this row is some kind of data dictionary inserted between the row of column names and the actual data.&lt;/p&gt;
+&lt;p&gt;In this post, I’ll walk through a solution to this problem, using the &lt;code&gt;readr&lt;/code&gt; package. You can also watch along in the video.&lt;/p&gt;
+
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/Mayf_XhsQDE&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Warning!: I made a mistake when I said &lt;code&gt;readr&lt;/code&gt; uses the first 100 rows of your data to predict column types- it uses the first 1000 rows.&lt;/p&gt;
+&lt;div id=&#34;being-sticker-rich&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Being sticker rich&lt;/h1&gt;
+&lt;p&gt;The data I’ll use to read into R is from an article published in PLOS ONE called &lt;a href=&#34;http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0138928&#34;&gt;“Being Sticker Rich: Numerical Context Influences Children’s Sharing Behavior”&lt;/a&gt;. In this study, children (ages 3–11) received a small (12, “sticker poor”) or large (30, “sticker rich”) number of stickers, and were then given the opportunity to share their windfall with either one or multiple anonymous recipients. This type of experimental design is a version of the &lt;a href=&#34;https://en.wikipedia.org/wiki/Dictator_game&#34;&gt;Dictator Game&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/posts/readr-headers/stickers-plos-one.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;The main research questions the authors explored were: do the number of available resources and/or the number of potential recipients alter the likelihood of a child donating and/or the amount they donate? But, in order to answer this question, we have to be able to read in the data! Luckily, these lovely developmental psychologists opted to share their data on the &lt;a href=&#34;https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/LHAQ5W&#34;&gt;Harvard Dataverse&lt;/a&gt; as a tab-delimited file.&lt;/p&gt;
+&lt;p&gt;If you download the file, you can open it up in a plain text editor. &lt;img src=&#34;/img/posts/readr-headers/stickers-txt.png&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;You can also open it with Microsoft Excel. &lt;img src=&#34;/img/posts/readr-headers/stickers-table.png&#34; /&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;read-in-the-file&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Read in the file&lt;/h1&gt;
+&lt;p&gt;Let’s start by creating a variable called &lt;code&gt;link&lt;/code&gt; to store the link to the data file.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# create variable to store url
+link &amp;lt;- &amp;quot;https://dataverse.harvard.edu/api/access/datafile/2712105&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The file has a &lt;code&gt;.tab&lt;/code&gt; extension, so we know it is tab-delimited. This means that the right &lt;code&gt;readr&lt;/code&gt; function for reading this file is &lt;code&gt;read_tsv&lt;/code&gt;. Since we stored our link already as a character string, that is the only argument to the &lt;code&gt;read_tsv&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#install.packages(&amp;quot;readr&amp;quot;)
+library(readr) # load the readr package
+stickers &amp;lt;- read_tsv(link) 
+# spec()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now, we know the second row of data is wonky, but how can we see that in R? There are a number of ways we can go spelunking around into our data file. The easiest to print it. Since we used &lt;code&gt;readr&lt;/code&gt;, we have a tibble, which nicely prints to screen.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;stickers&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# # A tibble: 402 x 18
+#    SubjectNumber Condition NumberStickers NumberEnvelopes Gender Agemonths
+#    &amp;lt;chr&amp;gt;         &amp;lt;chr&amp;gt;     &amp;lt;chr&amp;gt;          &amp;lt;chr&amp;gt;           &amp;lt;chr&amp;gt;      &amp;lt;dbl&amp;gt;
+#  1 [Included Sa… 1=12:1; … 1=12; 2=30     1=1 recipient;… 1=fem…       NA 
+#  2 1             1         1              1               1            36.
+#  3 2             1         1              1               2            36.
+#  4 3             1         1              1               2            36.
+#  5 4             1         1              1               1            36.
+#  6 5             1         1              1               2            36.
+#  7 6             1         1              1               2            36.
+#  8 7             2         1              2               1            36.
+#  9 8             2         1              2               2            36.
+# 10 9             3         2              1               2            36.
+# # ... with 392 more rows, and 12 more variables: Ageyears &amp;lt;dbl&amp;gt;,
+# #   Agegroups &amp;lt;chr&amp;gt;, `Subject&amp;#39;sEnvelope` &amp;lt;chr&amp;gt;, LeftEnvelope &amp;lt;chr&amp;gt;,
+# #   RightEnvelope &amp;lt;chr&amp;gt;,
+# #   `absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)` &amp;lt;chr&amp;gt;,
+# #   `PercentGiven(Outof100percent)` &amp;lt;chr&amp;gt;, Giveornot &amp;lt;chr&amp;gt;,
+# #   LargerEnvelopeabs &amp;lt;chr&amp;gt;, LargeEnvelopepercent &amp;lt;chr&amp;gt;,
+# #   SmallerEnvelopeabs &amp;lt;chr&amp;gt;, SmallEnvelopepercent &amp;lt;chr&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Unfortunately, &lt;code&gt;dplyr::glimpse&lt;/code&gt; can’t help us much, because we have one variable name that is ridiculously long (&lt;code&gt;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&lt;/code&gt;). We’ll fix that with &lt;code&gt;dplyr::rename&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(dplyr)
+glimpse(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# Observations: 402
+# Variables: 18
+# $ SubjectNumber                                                                  &amp;lt;chr&amp;gt; ...
+# $ Condition                                                                      &amp;lt;chr&amp;gt; ...
+# $ NumberStickers                                                                 &amp;lt;chr&amp;gt; ...
+# $ NumberEnvelopes                                                                &amp;lt;chr&amp;gt; ...
+# $ Gender                                                                         &amp;lt;chr&amp;gt; ...
+# $ Agemonths                                                                      &amp;lt;dbl&amp;gt; ...
+# $ Ageyears                                                                       &amp;lt;dbl&amp;gt; ...
+# $ Agegroups                                                                      &amp;lt;chr&amp;gt; ...
+# $ `Subject&amp;#39;sEnvelope`                                                            &amp;lt;chr&amp;gt; ...
+# $ LeftEnvelope                                                                   &amp;lt;chr&amp;gt; ...
+# $ RightEnvelope                                                                  &amp;lt;chr&amp;gt; ...
+# $ `absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)` &amp;lt;chr&amp;gt; ...
+# $ `PercentGiven(Outof100percent)`                                                &amp;lt;chr&amp;gt; ...
+# $ Giveornot                                                                      &amp;lt;chr&amp;gt; ...
+# $ LargerEnvelopeabs                                                              &amp;lt;chr&amp;gt; ...
+# $ LargeEnvelopepercent                                                           &amp;lt;chr&amp;gt; ...
+# $ SmallerEnvelopeabs                                                             &amp;lt;chr&amp;gt; ...
+# $ SmallEnvelopepercent                                                           &amp;lt;chr&amp;gt; ...&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;More options:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# # A tibble: 6 x 18
+#   SubjectNumber  Condition NumberStickers NumberEnvelopes Gender Agemonths
+#   &amp;lt;chr&amp;gt;          &amp;lt;chr&amp;gt;     &amp;lt;chr&amp;gt;          &amp;lt;chr&amp;gt;           &amp;lt;chr&amp;gt;      &amp;lt;dbl&amp;gt;
+# 1 [Included Sam… 1=12:1; … 1=12; 2=30     1=1 recipient;… 1=fem…       NA 
+# 2 1              1         1              1               1            36.
+# 3 2              1         1              1               2            36.
+# 4 3              1         1              1               2            36.
+# 5 4              1         1              1               1            36.
+# 6 5              1         1              1               2            36.
+# # ... with 12 more variables: Ageyears &amp;lt;dbl&amp;gt;, Agegroups &amp;lt;chr&amp;gt;,
+# #   `Subject&amp;#39;sEnvelope` &amp;lt;chr&amp;gt;, LeftEnvelope &amp;lt;chr&amp;gt;, RightEnvelope &amp;lt;chr&amp;gt;,
+# #   `absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)` &amp;lt;chr&amp;gt;,
+# #   `PercentGiven(Outof100percent)` &amp;lt;chr&amp;gt;, Giveornot &amp;lt;chr&amp;gt;,
+# #   LargerEnvelopeabs &amp;lt;chr&amp;gt;, LargeEnvelopepercent &amp;lt;chr&amp;gt;,
+# #   SmallerEnvelopeabs &amp;lt;chr&amp;gt;, SmallEnvelopepercent &amp;lt;chr&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;tail(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# # A tibble: 6 x 18
+#   SubjectNumber Condition NumberStickers NumberEnvelopes Gender Agemonths
+#   &amp;lt;chr&amp;gt;         &amp;lt;chr&amp;gt;     &amp;lt;chr&amp;gt;          &amp;lt;chr&amp;gt;           &amp;lt;chr&amp;gt;      &amp;lt;dbl&amp;gt;
+# 1 396           1         1              1               2           136.
+# 2 397           4         2              2               1           136.
+# 3 398           1         1              1               1           137.
+# 4 399           1         1              1               2           137.
+# 5 400           4         2              2               2           139.
+# 6 401           3         2              1               1           143.
+# # ... with 12 more variables: Ageyears &amp;lt;dbl&amp;gt;, Agegroups &amp;lt;chr&amp;gt;,
+# #   `Subject&amp;#39;sEnvelope` &amp;lt;chr&amp;gt;, LeftEnvelope &amp;lt;chr&amp;gt;, RightEnvelope &amp;lt;chr&amp;gt;,
+# #   `absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)` &amp;lt;chr&amp;gt;,
+# #   `PercentGiven(Outof100percent)` &amp;lt;chr&amp;gt;, Giveornot &amp;lt;chr&amp;gt;,
+# #   LargerEnvelopeabs &amp;lt;chr&amp;gt;, LargeEnvelopepercent &amp;lt;chr&amp;gt;,
+# #   SmallerEnvelopeabs &amp;lt;chr&amp;gt;, SmallEnvelopepercent &amp;lt;chr&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;names(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;#  [1] &amp;quot;SubjectNumber&amp;quot;                                                               
+#  [2] &amp;quot;Condition&amp;quot;                                                                   
+#  [3] &amp;quot;NumberStickers&amp;quot;                                                              
+#  [4] &amp;quot;NumberEnvelopes&amp;quot;                                                             
+#  [5] &amp;quot;Gender&amp;quot;                                                                      
+#  [6] &amp;quot;Agemonths&amp;quot;                                                                   
+#  [7] &amp;quot;Ageyears&amp;quot;                                                                    
+#  [8] &amp;quot;Agegroups&amp;quot;                                                                   
+#  [9] &amp;quot;Subject&amp;#39;sEnvelope&amp;quot;                                                           
+# [10] &amp;quot;LeftEnvelope&amp;quot;                                                                
+# [11] &amp;quot;RightEnvelope&amp;quot;                                                               
+# [12] &amp;quot;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&amp;quot;
+# [13] &amp;quot;PercentGiven(Outof100percent)&amp;quot;                                               
+# [14] &amp;quot;Giveornot&amp;quot;                                                                   
+# [15] &amp;quot;LargerEnvelopeabs&amp;quot;                                                           
+# [16] &amp;quot;LargeEnvelopepercent&amp;quot;                                                        
+# [17] &amp;quot;SmallerEnvelopeabs&amp;quot;                                                          
+# [18] &amp;quot;SmallEnvelopepercent&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# View()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now we are ready to diagnose the problem!&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Problem&lt;/strong&gt;: the first row is not really data. It is metadata about the variables, and it is screwing up &lt;strong&gt;readr&lt;/strong&gt;’s ability to predict our column types.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Solution&lt;/strong&gt;: we’ll use &lt;strong&gt;readr&lt;/strong&gt; and the &lt;code&gt;read_tsv()&lt;/code&gt; function to read in the data twice. In Step 1, we’ll create a character vector of the column names only. In Step 2, we’ll read in the actual data and skip the multiple header rows at the top. When we do this, we lose the column names, so we use the character vector of column names we created in Step 1 instead.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;read-in-the-file-again&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Read in the file (again)&lt;/h1&gt;
+&lt;div id=&#34;step-1&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Step 1&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Goal&lt;/strong&gt;: we want to read in the first row only and save it as a character vector called &lt;code&gt;sticker_names&lt;/code&gt;. This row contains the correct column names that we’ll need in Step 2.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;sticker_names &amp;lt;- link %&amp;gt;% 
+  read_tsv(n_max = 0) %&amp;gt;% # default: col_names = TRUE
+  rename(stickersgiven = &amp;#39;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&amp;#39;) %&amp;gt;% 
+  names()
+sticker_names&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;#  [1] &amp;quot;SubjectNumber&amp;quot;                 &amp;quot;Condition&amp;quot;                    
+#  [3] &amp;quot;NumberStickers&amp;quot;                &amp;quot;NumberEnvelopes&amp;quot;              
+#  [5] &amp;quot;Gender&amp;quot;                        &amp;quot;Agemonths&amp;quot;                    
+#  [7] &amp;quot;Ageyears&amp;quot;                      &amp;quot;Agegroups&amp;quot;                    
+#  [9] &amp;quot;Subject&amp;#39;sEnvelope&amp;quot;             &amp;quot;LeftEnvelope&amp;quot;                 
+# [11] &amp;quot;RightEnvelope&amp;quot;                 &amp;quot;stickersgiven&amp;quot;                
+# [13] &amp;quot;PercentGiven(Outof100percent)&amp;quot; &amp;quot;Giveornot&amp;quot;                    
+# [15] &amp;quot;LargerEnvelopeabs&amp;quot;             &amp;quot;LargeEnvelopepercent&amp;quot;         
+# [17] &amp;quot;SmallerEnvelopeabs&amp;quot;            &amp;quot;SmallEnvelopepercent&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;glimpse(sticker_names)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;#  chr [1:18] &amp;quot;SubjectNumber&amp;quot; &amp;quot;Condition&amp;quot; &amp;quot;NumberStickers&amp;quot; ...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;step-2&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Step 2&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Goal&lt;/strong&gt;: we want to read in all the rows &lt;em&gt;except&lt;/em&gt; for the first two rows, which contained the variable names and variable descriptions. We want to save this as &lt;code&gt;stickers&lt;/code&gt;, and set the column names to the &lt;code&gt;sticker_names&lt;/code&gt; object we created in Step 1.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;stickers &amp;lt;- link %&amp;gt;% 
+  read_tsv(skip = 2, col_names = sticker_names)
+glimpse(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# Observations: 401
+# Variables: 18
+# $ SubjectNumber                   &amp;lt;dbl&amp;gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,...
+# $ Condition                       &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, ...
+# $ NumberStickers                  &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, ...
+# $ NumberEnvelopes                 &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, ...
+# $ Gender                          &amp;lt;dbl&amp;gt; 1, 2, 2, 1, 2, 2, 1, 2, 2, 2, ...
+# $ Agemonths                       &amp;lt;dbl&amp;gt; 36, 36, 36, 36, 36, 36, 36, 36...
+# $ Ageyears                        &amp;lt;dbl&amp;gt; 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...
+# $ Agegroups                       &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+# $ `Subject&amp;#39;sEnvelope`             &amp;lt;dbl&amp;gt; 7, 12, 4, 7, 12, 8, 8, 11, 26,...
+# $ LeftEnvelope                    &amp;lt;dbl&amp;gt; 5, 0, 8, 5, 0, 4, 2, 1, 4, 0, ...
+# $ RightEnvelope                   &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 0, ...
+# $ stickersgiven                   &amp;lt;dbl&amp;gt; 5, 0, 8, 5, 0, 4, 4, 1, 4, 0, ...
+# $ `PercentGiven(Outof100percent)` &amp;lt;dbl&amp;gt; 0.42, 0.00, 0.67, 0.42, 0.00, ...
+# $ Giveornot                       &amp;lt;dbl&amp;gt; 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, ...
+# $ LargerEnvelopeabs               &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 1, ...
+# $ LargeEnvelopepercent            &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 0.5000...
+# $ SmallerEnvelopeabs              &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 0, ...
+# $ SmallEnvelopepercent            &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 0.5000...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;fin&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Fin!&lt;/h1&gt;
+&lt;p&gt;All together now: the final solution!&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# load packages
+library(readr)
+library(dplyr)
+
+# create variable to store url
+link &amp;lt;- &amp;quot;https://dataverse.harvard.edu/api/access/datafile/2712105&amp;quot;
+
+# read in column names only
+sticker_names &amp;lt;- link %&amp;gt;% 
+  read_tsv(n_max = 0) %&amp;gt;% # default: col_names = TRUE
+  rename(stickersgiven = &amp;#39;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&amp;#39;) %&amp;gt;% 
+  names()
+
+# read in data, set column names
+stickers &amp;lt;- link %&amp;gt;% 
+  read_tsv(skip = 2, col_names = sticker_names)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;addendum&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Addendum&lt;/h1&gt;
+&lt;p&gt;For good measure, I would add a final step to everything above and use &lt;code&gt;janitor::clean_names()&lt;/code&gt; to put all the variable names into snake case. So my final final solution is here:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# load packages
+library(readr)
+library(dplyr)
+library(janitor)
+
+# create variable to store url
+link &amp;lt;- &amp;quot;https://dataverse.harvard.edu/api/access/datafile/2712105&amp;quot;
+
+# read in column names only
+sticker_names &amp;lt;- link %&amp;gt;% 
+  read_tsv(n_max = 0) %&amp;gt;% # default: col_names = TRUE
+  rename(stickersgiven = &amp;#39;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&amp;#39;) %&amp;gt;% 
+  names()
+
+# read in data, set column names
+stickers &amp;lt;- link %&amp;gt;% 
+  read_tsv(skip = 2, col_names = sticker_names) %&amp;gt;% 
+  clean_names()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;stickers&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# # A tibble: 401 x 18
+#    subject_number condition number_stickers number_envelopes gender
+#             &amp;lt;dbl&amp;gt;     &amp;lt;dbl&amp;gt;           &amp;lt;dbl&amp;gt;            &amp;lt;dbl&amp;gt;  &amp;lt;dbl&amp;gt;
+#  1             1.        1.              1.               1.     1.
+#  2             2.        1.              1.               1.     2.
+#  3             3.        1.              1.               1.     2.
+#  4             4.        1.              1.               1.     1.
+#  5             5.        1.              1.               1.     2.
+#  6             6.        1.              1.               1.     2.
+#  7             7.        2.              1.               2.     1.
+#  8             8.        2.              1.               2.     2.
+#  9             9.        3.              2.               1.     2.
+# 10            10.        3.              2.               1.     2.
+# # ... with 391 more rows, and 13 more variables: agemonths &amp;lt;dbl&amp;gt;,
+# #   ageyears &amp;lt;dbl&amp;gt;, agegroups &amp;lt;dbl&amp;gt;, subjects_envelope &amp;lt;dbl&amp;gt;,
+# #   left_envelope &amp;lt;dbl&amp;gt;, right_envelope &amp;lt;dbl&amp;gt;, stickersgiven &amp;lt;dbl&amp;gt;,
+# #   percent_given_outof100percent &amp;lt;dbl&amp;gt;, giveornot &amp;lt;dbl&amp;gt;,
+# #   larger_envelopeabs &amp;lt;dbl&amp;gt;, large_envelopepercent &amp;lt;dbl&amp;gt;,
+# #   smaller_envelopeabs &amp;lt;dbl&amp;gt;, small_envelopepercent &amp;lt;dbl&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;glimpse(stickers)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# Observations: 401
+# Variables: 18
+# $ subject_number                &amp;lt;dbl&amp;gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1...
+# $ condition                     &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 3,...
+# $ number_stickers               &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2,...
+# $ number_envelopes              &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1,...
+# $ gender                        &amp;lt;dbl&amp;gt; 1, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2,...
+# $ agemonths                     &amp;lt;dbl&amp;gt; 36, 36, 36, 36, 36, 36, 36, 36, ...
+# $ ageyears                      &amp;lt;dbl&amp;gt; 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,...
+# $ agegroups                     &amp;lt;dbl&amp;gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+# $ subjects_envelope             &amp;lt;dbl&amp;gt; 7, 12, 4, 7, 12, 8, 8, 11, 26, 3...
+# $ left_envelope                 &amp;lt;dbl&amp;gt; 5, 0, 8, 5, 0, 4, 2, 1, 4, 0, 18...
+# $ right_envelope                &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 0, NA...
+# $ stickersgiven                 &amp;lt;dbl&amp;gt; 5, 0, 8, 5, 0, 4, 4, 1, 4, 0, 18...
+# $ percent_given_outof100percent &amp;lt;dbl&amp;gt; 0.42, 0.00, 0.67, 0.42, 0.00, 0....
+# $ giveornot                     &amp;lt;dbl&amp;gt; 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1,...
+# $ larger_envelopeabs            &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 1, NA...
+# $ large_envelopepercent         &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 0.500000...
+# $ smaller_envelopeabs           &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 2, 0, NA...
+# $ small_envelopepercent         &amp;lt;dbl&amp;gt; NA, NA, NA, NA, NA, NA, 0.500000...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;bonus-data-dictionary&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Bonus data dictionary&lt;/h1&gt;
+&lt;p&gt;As an extra bonus, when you do have extra header rows, you can create a data dictionary using the &lt;code&gt;gather()&lt;/code&gt; function from the &lt;strong&gt;tidyr&lt;/strong&gt; package.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyr)
+stickers_dict &amp;lt;- read_tsv(link, n_max = 1) %&amp;gt;% 
+  rename(stickersgiven = &amp;#39;absolutenumberofstickersgiven(Conditions1or3:Outof12;Conditions2or4:Outof30)&amp;#39;) %&amp;gt;% 
+  clean_names() %&amp;gt;% 
+  gather(variable_name, variable_description)
+stickers_dict&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;# # A tibble: 18 x 2
+#    variable_name                 variable_description                     
+#    &amp;lt;chr&amp;gt;                         &amp;lt;chr&amp;gt;                                    
+#  1 subject_number                [Included Sample Only]                   
+#  2 condition                     1=12:1; 2=12:2, 3=30:1, 4=30:2           
+#  3 number_stickers               1=12; 2=30                               
+#  4 number_envelopes              1=1 recipient; 2=2 recipients            
+#  5 gender                        1=female; 2=male                         
+#  6 agemonths                     &amp;lt;NA&amp;gt;                                     
+#  7 ageyears                      &amp;lt;NA&amp;gt;                                     
+#  8 agegroups                     1=3-4yrs; 2=5-6yrs; 3=7-8yrs; 4=9-11yrs  
+#  9 subjects_envelope             How many stickers did the child keep for…
+# 10 left_envelope                 1 recipient conditions: How many sticker…
+# 11 right_envelope                1 recipient conditions: N/A; 2 recipient…
+# 12 stickersgiven                 Regardless of condition, the number of s…
+# 13 percent_given_outof100percent Regardless of condition, the proportion …
+# 14 giveornot                     1=Donated 1 or more stickers to the reci…
+# 15 larger_envelopeabs            Raw number of stickers (out of 30: Condi…
+# 16 large_envelopepercent         Proportion of stickers (out of 100%; Con…
+# 17 smaller_envelopeabs           Raw number of stickers (out of 30: Condi…
+# 18 small_envelopepercent         Proportion of stickers (out of 100%; Con…&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;useful-resources&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Useful resources&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;Great blog post from &lt;a href=&#34;https://twitter.com/lisadebruine&#34;&gt;Lisa DeBruine&lt;/a&gt; using &lt;code&gt;readxl&lt;/code&gt; to read in data with multiple header rows (including those with merged cells!): &lt;a href=&#34;https://debruine.github.io/multirow_headers.html&#34; class=&#34;uri&#34;&gt;https://debruine.github.io/multirow_headers.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;This GitHub issue with Hadley’s response that solved all my problems: &lt;a href=&#34;https://github.com/tidyverse/readr/issues/179&#34; class=&#34;uri&#34;&gt;https://github.com/tidyverse/readr/issues/179&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;My original tweet when I discovered this trick!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;Neat &lt;a href=&#34;https://twitter.com/hashtag/rstats?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#rstats&lt;/a&gt; &lt;a href=&#34;https://twitter.com/hashtag/readr?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#readr&lt;/a&gt; &lt;a href=&#34;https://twitter.com/hashtag/tidyverse?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#tidyverse&lt;/a&gt; solution to read data when 1st row is header + 2nd row is junk, thanks &lt;a href=&#34;https://twitter.com/hadleywickham?ref_src=twsrc%5Etfw&#34;&gt;@hadleywickham&lt;/a&gt; &lt;a href=&#34;https://t.co/5TuH7vNaID&#34;&gt;https://t.co/5TuH7vNaID&lt;/a&gt; &lt;a href=&#34;https://t.co/woZ3HuECge&#34;&gt;pic.twitter.com/woZ3HuECge&lt;/a&gt;&lt;/p&gt;&amp;mdash; Alison Hill (@apreshill) &lt;a href=&#34;https://twitter.com/apreshill/status/904772340902379520?ref_src=twsrc%5Etfw&#34;&gt;September 4, 2017&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Making a data package for teaching</title>
+      <link>/post/repro-health/</link>
+      <pubDate>Sun, 01 Jul 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/repro-health/</guid>
+      <description>&lt;p&gt;First created a github repo, cloned locally into an R project.&lt;/p&gt;
+&lt;div id=&#34;create-the-package&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Create the package&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create a new package -------------------------------------------------
+library(usethis)
+library(here)
+
+create_package(here::here()) # could have also used getwd()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;screenshot here&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;add-dependencies&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Add dependencies&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;deps &amp;lt;- c(&amp;quot;dplyr&amp;quot;, &amp;quot;tidyr&amp;quot;, &amp;quot;readr&amp;quot;, &amp;quot;stringr&amp;quot;, &amp;quot;janitor&amp;quot;, &amp;quot;purrr&amp;quot;, &amp;quot;ggplot2&amp;quot;, &amp;quot;wbstats&amp;quot;, &amp;quot;gapminder&amp;quot;)
+library(purrr)
+walk(deps, usethis::use_package, type = &amp;quot;Suggests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;add-license&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Add license&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_mit_license(&amp;quot;Alison Hill&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;updated-description&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Updated DESCRIPTION&lt;/h1&gt;
+&lt;p&gt;basically copied from jenny’s &lt;a href=&#34;https://github.com/jennybc/gapminder/blob/master/DESCRIPTION&#34; class=&#34;uri&#34;&gt;https://github.com/jennybc/gapminder/blob/master/DESCRIPTION&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;make-and-edit-news-readme&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Make and edit news + readme&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_news_md()
+use_readme_rmd()&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;make-package-docs&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Make package docs&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_package_doc()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;creates new R script in &lt;code&gt;R&lt;/code&gt; folder, just help page for whole package like &lt;code&gt;?globalwomen&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;this updated the description file&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_roxygen_md()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;NOW TWO TO-DO ITEMS -vignettes -setting up documentation (everything in &lt;code&gt;R&lt;/code&gt; folder is where &lt;code&gt;roxygen&lt;/code&gt; will look for stuff to put automatically in &lt;code&gt;man&lt;/code&gt; folder as .Rd files)&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Up and running with usethis</title>
+      <link>/post/data-package/</link>
+      <pubDate>Fri, 29 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/data-package/</guid>
+      <description>&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#who-what-when-where-why-and-how&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;1&lt;/span&gt; Who, what, when, where, why, and how&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#use-this-now&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;2&lt;/span&gt; Use this now&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-the-package&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;3&lt;/span&gt; Create the package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#add-dependencies&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;4&lt;/span&gt; Add dependencies&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#update-the-description&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;5&lt;/span&gt; Update the description&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#add-a-license&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;6&lt;/span&gt; Add a license&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#make-news.md-readme.rmd&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;7&lt;/span&gt; Make news.md + readme.rmd&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#write-package-level-docs&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;8&lt;/span&gt; Write package-level docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#write-more-docs&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;9&lt;/span&gt; Write more docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-package-data&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;10&lt;/span&gt; Create package data&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#use-roxygen-move-this-to-earlier-after-description&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;11&lt;/span&gt; Use &lt;code&gt;roxygen&lt;/code&gt; (move this to earlier after description)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#build-the-package&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;12&lt;/span&gt; Build the package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#make-a-package-website&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;13&lt;/span&gt; Make a package website&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#edit-your-package-site&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;14&lt;/span&gt; Edit your package site&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#push-to-github-deploy&#34;&gt;&lt;span class=&#34;toc-section-number&#34;&gt;15&lt;/span&gt; Push to GitHub &amp;amp; deploy&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;div id=&#34;who-what-when-where-why-and-how&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;1&lt;/span&gt; Who, what, when, where, why, and how&lt;/h1&gt;
+&lt;p&gt;A few &lt;del&gt;days&lt;/del&gt; &lt;del&gt;weeks&lt;/del&gt; months ago, I sat down with &lt;a href=&#34;http://chester.rbind.io&#34;&gt;Chester Ismay&lt;/a&gt; to make a package. I had been sitting for months already on a really fun bunch of datasets I scraped from Wikipedia on “The Great British Bake Off” for my &lt;a href=&#34;https://www.datacamp.com/courses/working-with-data-in-the-tidyverse&#34;&gt;new DataCamp.com course&lt;/a&gt;. For years, I have been &lt;strong&gt;so jealous&lt;/strong&gt; of all these awesome people who make awesome R data packages. Then Chester, co-author of the &lt;a href=&#34;https://fivethirtyeight-R.netlify.com&#34;&gt;{fivethirtyeight}&lt;/a&gt; and &lt;a href=&#34;https://infer.netlify.com&#34;&gt;{infer}&lt;/a&gt; and &lt;a href=&#34;https://moderndive.com&#34;&gt;{moderndive}&lt;/a&gt; packages, &lt;em&gt;offered&lt;/em&gt; to help me make my data into a data package, and then things got really exciting.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/3o6Zt6Glokp9L0OzWo/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;We sat down for a few hours and &lt;a href=&#34;https://bakeoff.netlify.com&#34;&gt;DID IT&lt;/a&gt;! And I did what I always do- took serious notes in an R Markdown doc and took lots of screenshots as breadcrumbs for myself, also thinking that maybe a future blog post might be a good way to bundle up all of Chester’s data-package-making magic. But then things happened, my laptop went in for major surgery, and I put writing the blog post off. THEN, I saw this tweet:&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;I have a draft of such a thing!! 😉 draft title is “I sat down with &lt;a href=&#34;https://twitter.com/old_man_chester?ref_src=twsrc%5Etfw&#34;&gt;@old_man_chester&lt;/a&gt; and took really good notes and screenshots”&lt;/p&gt;&amp;mdash; Alison Hill (@apreshill) &lt;a href=&#34;https://twitter.com/apreshill/status/1029438219689938944?ref_src=twsrc%5Etfw&#34;&gt;August 14, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;And THEN the lovely &lt;a href=&#34;https://irene.rbind.io&#34;&gt;Irene Steves&lt;/a&gt; linked to a &lt;a href=&#34;https://isteves.github.io/r-pkg-intro/Presentation.html#/&#34;&gt;package tutorial presentation&lt;/a&gt; she did awhile ago using &lt;code&gt;devtools&lt;/code&gt; instead of &lt;code&gt;usethis&lt;/code&gt;, and offered to collaborate on the post too!&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;I have a presentation form of this, too.  ...though it looks like I used `devtools::` instead of `usethis::` for most of the use_* functions.  Happy to help/collaborate on this!&lt;/p&gt;&amp;mdash; Irene Steves (@i_steves) &lt;a href=&#34;https://twitter.com/i_steves/status/1029460619068497921?ref_src=twsrc%5Etfw&#34;&gt;August 14, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;Now this little project of ours got both exciting but real.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/3o7TKqspn1HC6vlyJa/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;Chester, Irene, and I had a video conference this past week, went over a draft of this post, and now the pressure is on. without further ado (and I promise, with fewer gifs), we present our code-through of making a package using &lt;code&gt;usethis&lt;/code&gt;! And our first spoiler: you will need other packages too.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/1hMk06C3GSozNLO4vX/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;use-this-now&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;2&lt;/span&gt; Use this now&lt;/h1&gt;
+&lt;p&gt;What is &lt;a href=&#34;http://usethis.r-lib.org&#34;&gt;&lt;code&gt;usethis&lt;/code&gt;&lt;/a&gt;?&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;Please welcome our new 🤖 overlord: &lt;a href=&#34;https://t.co/wdgDC0jK1r&#34;&gt;https://t.co/wdgDC0jK1r&lt;/a&gt; &lt;a href=&#34;https://twitter.com/hashtag/rstats?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#rstats&lt;/a&gt; &lt;a href=&#34;https://t.co/E1k09ZHjNT&#34;&gt;pic.twitter.com/E1k09ZHjNT&lt;/a&gt;&lt;/p&gt;&amp;mdash; Hadley Wickham (@hadleywickham) &lt;a href=&#34;https://twitter.com/hadleywickham/status/1027293165735358464?ref_src=twsrc%5Etfw&#34;&gt;August 8, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://usethis.r-lib.org&#34;&gt;&lt;code&gt;usethis&lt;/code&gt;&lt;/a&gt; is a new-ish package by the folks at RStudio to automate workflow management. There are all kinds of workflow-related functions for non-package projects as well, alongside a comprehensive suite of functions specific to &lt;a href=&#34;http://usethis.r-lib.org/reference/index.html#section-package-development&#34;&gt;package development&lt;/a&gt; which we’ll refer to this post. However, as with most package reference docs, they assume you know a proper package development workflow already. So this post will attempt to give you a play-by-play for when to use which &lt;code&gt;usethis&lt;/code&gt; function, and why.&lt;/p&gt;
+&lt;p&gt;Disclaimer: there are many package development workflows- this is just one offering.&lt;/p&gt;
+&lt;p&gt;Do this first:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Install and load the package
+install.packages(&amp;quot;usethis&amp;quot;)
+library(usethis)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;-Made the package -Dependencies -Edit description - add license - add vignette - add news - add readme&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;create-the-package&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;3&lt;/span&gt; Create the package&lt;/h1&gt;
+&lt;p&gt;The first step is to create and name your new package. You can do this several ways. If you are working in RStudio, you can do File -&amp;gt; New Project -&amp;gt; R Package. You could also use &lt;code&gt;usethis::create_package&lt;/code&gt;, which if not already within an R Project, will create a new R Project for you.&lt;/p&gt;
+&lt;p&gt;But, we are guessing you’ll eventually want to use GitHub here (for lots of reasons), so I first set up a new GitHub repository without a README. At this point, you’ll want to consider your package name. Names must not have any special characters and can only contain letters, numbers, and dots. You are probably better off using all lower-case, like &lt;code&gt;gapminder&lt;/code&gt;, &lt;code&gt;fivethirtyeight&lt;/code&gt;, etc. We went with &lt;code&gt;bakeoff&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Once I had my &lt;code&gt;bakeoff&lt;/code&gt; GitHub repo, I opened up RStudio and ran:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Clone the remote repo
+create_from_github(&amp;quot;apreshill/bakeoff&amp;quot;) # owner/reponame&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This creates an R Project for you that is linked to your remote GitHub repository. With that project is open, we were finally ready to actually create the new package:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create a new package -------------------------------------------------
+create_package(here::here()) # could have also used getwd()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;What did this step do? (edit this below)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;R/&lt;/code&gt;: the R code&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;man/&lt;/code&gt;: the documentation (generated by roxygen2: do not edit by hand)&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;DESCRIPTION&lt;/code&gt;: the metadata of the package&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;NAMESPACE&lt;/code&gt;: how the package interacts with R and with other packages (do not edit by hand)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;add-dependencies&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;4&lt;/span&gt; Add dependencies&lt;/h1&gt;
+&lt;p&gt;I wanted to have the ability to include vignettes with details about how this data was scraped and wrangled, a la Jenny Bryan’s &lt;code&gt;gapminder&lt;/code&gt; package. So we needed to add dependencies. Chester told me &lt;strong&gt;NOT&lt;/strong&gt; to add the &lt;code&gt;library(tidyverse)&lt;/code&gt; as a dependency, or Mara might come after me. So we listed all these &lt;code&gt;tidyverse&lt;/code&gt; out with &lt;code&gt;type = &amp;quot;Suggests&amp;quot;&lt;/code&gt; since they are not necessary for actually &lt;em&gt;using&lt;/em&gt; the data package. We tried this first, which did not work:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# this won&amp;#39;t work
+use_package(c(&amp;quot;rvest&amp;quot;, &amp;quot;dplyr&amp;quot;, &amp;quot;tidyr&amp;quot;, &amp;quot;readr&amp;quot;, &amp;quot;stringr&amp;quot;, 
+              &amp;quot;janitor&amp;quot;, &amp;quot;purrr&amp;quot;, &amp;quot;lubridate&amp;quot;, &amp;quot;ggplot2&amp;quot;), 
+            type = &amp;quot;Suggests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And produced this error:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;Error in use_package(c(&amp;quot;rvest&amp;quot;, &amp;quot;dplyr&amp;quot;, &amp;quot;tidyr&amp;quot;, &amp;quot;readr&amp;quot;, &amp;quot;stringr&amp;quot;,  : 
+  could not find function &amp;quot;use_package&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So we decided to try using &lt;code&gt;purrr::walk&lt;/code&gt; to apply the &lt;code&gt;use_package&lt;/code&gt; function to each element in the new &lt;code&gt;deps&lt;/code&gt; vector we made.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# this will work
+deps &amp;lt;- c(&amp;quot;rvest&amp;quot;, &amp;quot;dplyr&amp;quot;, &amp;quot;tidyr&amp;quot;, &amp;quot;readr&amp;quot;, &amp;quot;stringr&amp;quot;, 
+          &amp;quot;janitor&amp;quot;, &amp;quot;purrr&amp;quot;, &amp;quot;lubridate&amp;quot;, &amp;quot;ggplot2&amp;quot;)
+library(purrr)
+walk(deps, usethis::use_package, type = &amp;quot;Suggests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And success! That worked.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;✔ Adding &amp;#39;rvest&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `rvest::fun()`
+✔ Adding &amp;#39;dplyr&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `dplyr::fun()`
+✔ Adding &amp;#39;tidyr&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `tidyr::fun()`
+✔ Adding &amp;#39;readr&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `readr::fun()`
+✔ Adding &amp;#39;stringr&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `stringr::fun()`
+✔ Adding &amp;#39;janitor&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `janitor::fun()`
+✔ Adding &amp;#39;purrr&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `purrr::fun()`
+✔ Adding &amp;#39;lubridate&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `lubridate::fun()`
+✔ Adding &amp;#39;ggplot2&amp;#39; to Imports field in DESCRIPTION
+● Refer to functions with `ggplot2::fun()`&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;update-the-description&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;5&lt;/span&gt; Update the description&lt;/h1&gt;
+&lt;p&gt;after updating description with persons and SAVING&lt;/p&gt;
+&lt;p&gt;note: very important! In authors there is a blank in the vector &lt;code&gt;, ,&lt;/code&gt;. If you delete this you’ll get a crazy error later on:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;roxygen2::roxygenise()
+It is recommended to use ‘given’ instead of ‘middle’.
+It is recommended to use ‘given’ instead of ‘middle’.
+Error in vapply(unclass(authors), author_desc, character(1)) : 
+  values must be length 1,
+ but FUN(X[[1]]) result is length 2&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I should have left the space in, or specified &lt;code&gt;email =&lt;/code&gt; for the third argument, becuase the function &lt;code&gt;person&lt;/code&gt; assumed this was my middle name.&lt;/p&gt;
+&lt;p&gt;We also updated the version number. What on earth do those numbers mean?&lt;/p&gt;
+&lt;p&gt;I also noticed that Nick Tierney links to his ORCID, and went hunting around in his GitHub to see how. You can specify this in the DESCRIPTION:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Authors@R: c(
+  person(&amp;quot;Alison&amp;quot;, &amp;quot;Hill&amp;quot;, 
+          email = &amp;quot;apresstats@gmail.com&amp;quot;, 
+          role = c(&amp;quot;aut&amp;quot;, &amp;quot;cre&amp;quot;),
+          comment = c(ORCID = &amp;quot;https://orcid.org/0000-0002-8082-1890&amp;quot;)),
+  person(&amp;quot;Chester&amp;quot;, &amp;quot;Ismay&amp;quot;, email = &amp;quot;chester.ismay@gmail.com&amp;quot;, role = &amp;quot;aut&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;add-a-license&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;6&lt;/span&gt; Add a license&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_mit_license(&amp;quot;Alison Hill&amp;quot;)
+use_vignette(&amp;quot;bakeoffs-abroad&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;✔ Setting License field in DESCRIPTION to &amp;#39;MIT + file LICENSE&amp;#39;
+✔ Writing &amp;#39;LICENSE.md&amp;#39;
+✔ Adding &amp;#39;^LICENSE\\.md$&amp;#39; to &amp;#39;.Rbuildignore&amp;#39;
+✔ Writing &amp;#39;LICENSE&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/3o6ZtlcUkVCogjBTS8/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;make-news.md-readme.rmd&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;7&lt;/span&gt; Make news.md + readme.rmd&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_news_md()
+use_readme_rmd()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;in read me&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# install.packages(&amp;quot;remotes&amp;quot;)
+remotes::install_github(&amp;quot;apreshill/bakeoff&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;write-package-level-docs&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;8&lt;/span&gt; Write package-level docs&lt;/h1&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_package_doc()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This creates a new file in the &lt;code&gt;R&lt;/code&gt; folder called &lt;code&gt;bakeoff-package.R&lt;/code&gt;. This script is actually just the help page for the whole package, so what you see if you type &lt;code&gt;?bakeoff&lt;/code&gt; after loading the package.&lt;/p&gt;
+&lt;p&gt;I edited &lt;code&gt;bakeoff-package.R&lt;/code&gt; using &lt;a href=&#34;https://github.com/rudeboybert/fivethirtyeight/blob/master/R/fivethirtyeight.R&#34; class=&#34;uri&#34;&gt;https://github.com/rudeboybert/fivethirtyeight/blob/master/R/fivethirtyeight.R&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;write-more-docs&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;9&lt;/span&gt; Write more docs&lt;/h1&gt;
+&lt;p&gt;Link to some examples on GitHub package site.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Cmd/Ctrl&lt;/code&gt; + &lt;code&gt;Opt/Alt&lt;/code&gt; + &lt;code&gt;Shift&lt;/code&gt; + &lt;code&gt;R&lt;/code&gt; inserts roxygen skeleton&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_r()&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;create-package-data&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;10&lt;/span&gt; Create package data&lt;/h1&gt;
+&lt;p&gt;Since we are making a data package here, now is a good time to add data. But, because all this work went mainly into the scripts for scraping and wrangling “The Great British Bake Off” data, I wanted to save those too.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“&lt;code&gt;use_data()&lt;/code&gt; makes it easy to save package data in the correct format. I recommend you save scripts that generate package data in data-raw: use &lt;code&gt;use_data_raw()&lt;/code&gt; to set it up.”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_data_raw()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The eventual package data needs to be &lt;code&gt;*.rda&lt;/code&gt; files, but it is not so simple as just copying/pasting a &lt;code&gt;.rda&lt;/code&gt; file and plopping it in the &lt;code&gt;data/&lt;/code&gt; folder. There are actually three distinct steps:&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Use &lt;code&gt;use_data_raw()&lt;/code&gt; and add .R scripts to that folder for scraping the Wikipedia data. Naming conventions are critical here- all my scraping scripts are titled “thing-scrape.R”. These scripts didn’t have any input data, but I did want to save the intermediate (read: pre-wrangled) .csv files, so they each ended with this kind of line:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;write_csv(bakers_df, here::here(&amp;quot;data-raw&amp;quot;, &amp;quot;bakers.csv&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;ol start=&#34;2&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Next came the wrangling scripts, also within the &lt;code&gt;data-raw/&lt;/code&gt; folder, which were each named “thing-wrangle.R”. Each of these scripts begin with a line like this:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;bakers &amp;lt;- readr::read_csv(here::here(&amp;quot;data-raw&amp;quot;, &amp;quot;bakers.csv&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;ol start=&#34;3&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;At the end of each wrangling script is the critical export line, going back to the &lt;code&gt;usethis&lt;/code&gt; package. This line exports the final data frame as a &lt;code&gt;*.rda&lt;/code&gt; file and places it now in the &lt;code&gt;data/&lt;/code&gt; folder:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;usethis::use_data(bakers, overwrite = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;use-roxygen-move-this-to-earlier-after-description&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;11&lt;/span&gt; Use &lt;code&gt;roxygen&lt;/code&gt; (move this to earlier after description)&lt;/h1&gt;
+&lt;p&gt;Why? Two main things that should be roxygenized:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Vignettes&lt;/li&gt;
+&lt;li&gt;Documentation&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So far, everything in your &lt;code&gt;R/&lt;/code&gt; folder is inert. It needs to be roxygenized: &lt;code&gt;roxygen&lt;/code&gt; will look for &lt;code&gt;*.R&lt;/code&gt; files in your &lt;code&gt;R/&lt;/code&gt; folder, and will automatically convert them into &lt;code&gt;*.Rd&lt;/code&gt; files in your &lt;code&gt;man/&lt;/code&gt; folder.&lt;/p&gt;
+&lt;p&gt;this updated the description file&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;use_roxygen_md()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;✔ Setting Roxygen field in DESCRIPTION to &amp;#39;list(markdown = TRUE)&amp;#39;
+✔ Setting RoxygenNote field in DESCRIPTION to &amp;#39;6.0.1&amp;#39;
+● Re-document&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;TWO MAIN THINGS -vignettes -setting up documentation (everything in the &lt;code&gt;R/&lt;/code&gt; folder is where &lt;code&gt;roxygen&lt;/code&gt; will look for stuff to put automatically in &lt;code&gt;man/&lt;/code&gt; folder as `&lt;em&gt;.Rd&lt;/em&gt; files)&lt;/p&gt;
+&lt;p&gt;may need: &lt;a href=&#34;https://github.com/rudeboybert/fivethirtyeight/blob/master/data_import_procedure.md&#34; class=&#34;uri&#34;&gt;https://github.com/rudeboybert/fivethirtyeight/blob/master/data_import_procedure.md&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Now &lt;code&gt;man&lt;/code&gt; is empty though! Need to get stuff from &lt;code&gt;R&lt;/code&gt; file into &lt;code&gt;man&lt;/code&gt; using &lt;code&gt;roxygen&lt;/code&gt;. Note that good stuff on roxygen in the R packages cheatsheet.&lt;/p&gt;
+&lt;p&gt;Two ways- see screen shots&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/post/2018-06-29-data-package_files/configure-build-tools.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/post/2018-06-29-data-package_files/roxygen-build-tools.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;OR&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;roxygen2::roxygenise()&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;roxygen2::roxygenise() It is recommended to use ‘given’ instead of ‘middle’. It is recommended to use ‘given’ instead of ‘middle’. Error in vapply(unclass(authors), author_desc, character(1)) : values must be length 1, but FUN(X[[1]]) result is length 2 ?roxygenise roxygen2::roxygenise() Writing NAMESPACE Writing bakeoff-package.Rd Writing bakeoff.Rd&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Cmd/Ctrl&lt;/code&gt; + &lt;code&gt;Shift&lt;/code&gt; + &lt;code&gt;D&lt;/code&gt; to generate &lt;code&gt;/man&lt;/code&gt; files (&lt;code&gt;*.Rd&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;build-the-package&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;12&lt;/span&gt; Build the package&lt;/h1&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/xT39DdoX1AwKgVW8j6/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;OK, now we are switching to the &lt;code&gt;devtools&lt;/code&gt; package.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;install.packages(&amp;quot;devtools&amp;quot;)
+library(devtools)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;We are going to build this thing. Our goal is to be able to type &lt;code&gt;?bakeoff&lt;/code&gt; and see if we get the help page. To build, the keyboard shortcut you need here is: &lt;code&gt;COMMAND + SHIFT + B&lt;/code&gt;. We did this and then held our breath…&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/post/2018-06-29-data-package_files/first-build.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;And we got a successful build!&lt;/p&gt;
+&lt;p&gt;Then, in the console, I was able to load our little &lt;code&gt;bakeoff&lt;/code&gt; package:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(bakeoff)
+Warning message:
+package ‘purrr’ was built under R version 3.4.4 &lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;And the real test:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;?bakeoff&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/post/2018-06-29-data-package_files/first-build-bam.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;Real transcript as follows:&lt;/p&gt;
+&lt;p&gt;Alison: “AHHHH!” Chester: “BAM!”&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/xT39CYLQ82F4YjAc36/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;make-a-package-website&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;13&lt;/span&gt; Make a package website&lt;/h1&gt;
+&lt;p&gt;Sometimes the things that seem the hardest at the outset are actually the most painless. Case in point: making a website for your shiny new package. It is actually easy (I really try to avoid using that word!) with the &lt;code&gt;pkgdown&lt;/code&gt; package.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/3o6vY2Ef4cKfRf8loc/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;I didn’t have &lt;code&gt;pkgdown&lt;/code&gt; installed at first, which was OK still to run this function:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;usethis::use_pkgdown()
+● Modify &amp;#39;_pkgdown.yml&amp;#39;
+✔ Adding &amp;#39;^_pkgdown\\.yml$&amp;#39; to &amp;#39;.Rbuildignore&amp;#39;
+✔ Creating &amp;#39;docs/&amp;#39;
+✔ Adding &amp;#39;^docs$&amp;#39; to &amp;#39;.Rbuildignore&amp;#39;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;(can edit &lt;code&gt;_pkgdown.yml&lt;/code&gt;): &lt;a href=&#34;https://github.com/andrewpbray/infer/blob/develop/_pkgdown.yml&#34; class=&#34;uri&#34;&gt;https://github.com/andrewpbray/infer/blob/develop/_pkgdown.yml&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Now you can build your site with &lt;code&gt;pkgdown&lt;/code&gt;, although at this point (obviously) that package does need to be installed and loaded.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;install.packages(&amp;quot;pkgdown&amp;quot;)
+library(pkgdown)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Then you use:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;pkgdown::build_site()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;This function creates a static site in your &lt;code&gt;docs&lt;/code&gt; folder. You can also use the RStudio Addin “Build pkgdown”.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;edit-your-package-site&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;14&lt;/span&gt; Edit your package site&lt;/h1&gt;
+&lt;p&gt;You can edit the newly created &lt;code&gt;_pkgdown.yml&lt;/code&gt; file to customize your site. For example, you can insert links for the individual authors, and you can also use Bootswatch themes:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;url: https://bakeoff.netlify.com
+
+authors:
+  Alison Hill:
+    href: https://alison.rbind.io
+  Chester Ismay:
+    href: https://chester.rbind.io
+
+template:
+  params:
+    bootswatch: flatly&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Chester did a bunch more custom formatting because I managed to really screw up the rendering here. You can view our full &lt;code&gt;_pkgdown.yml&lt;/code&gt; file on GitHub.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;push-to-github-deploy&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;&lt;span class=&#34;header-section-number&#34;&gt;15&lt;/span&gt; Push to GitHub &amp;amp; deploy&lt;/h1&gt;
+&lt;p&gt;Once you are happy with your package and your package website, you are ready to push to GitHub. You can use GitHub Pages to deploy your site, but you need to remember that &lt;code&gt;pkgdown&lt;/code&gt; created your static site in your &lt;code&gt;docs&lt;/code&gt; folder of your master branch. So in your GitHub repo settings, you’ll need to&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/post/2018-06-29-data-package_files/pkgdown-gh-pages.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;I ended up switching to Netlify for deploying the site instead of GitHub Pages, and was able to nab the domain &lt;a href=&#34;https://bakeoff.netlify.com&#34; class=&#34;uri&#34;&gt;https://bakeoff.netlify.com&lt;/a&gt;. The trick with Netlify is to…&lt;/p&gt;
+&lt;p&gt;look on 538:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/rudeboybert/fivethirtyeight/tree/master/data-raw&#34; class=&#34;uri&#34;&gt;https://github.com/rudeboybert/fivethirtyeight/tree/master/data-raw&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;make a script to create &lt;code&gt;data/&lt;/code&gt; from &lt;code&gt;data-raw/&lt;/code&gt; automatically:&lt;/p&gt;
+&lt;p&gt;use R script &lt;code&gt;process_data_sets.R&lt;/code&gt; in &lt;code&gt;data-raw/&lt;/code&gt;–&amp;gt; takes csv files as input, do some additional taming, outputs rda files (overwrite = TRUE) using &lt;code&gt;usethis::use_data()&lt;/code&gt; to output &lt;code&gt;data/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;2 steps: - build package (command shift b) (&lt;code&gt;devtools::build()&lt;/code&gt;)&lt;/p&gt;
+&lt;p&gt;now: how to actually document a dataset 1) workflow: keep roxygenized script open for each dataset like bakers as &lt;code&gt;bakers.R&lt;/code&gt; in &lt;code&gt;R&lt;/code&gt; folder 2) also open a data-process.R in &lt;code&gt;data-raw/&lt;/code&gt; and edit back and forth as tabs, so &lt;code&gt;bakers-process.R&lt;/code&gt; this file MUST use &lt;code&gt;usethis::use_data&lt;/code&gt;, can’t just have .rda files in a &lt;code&gt;data/&lt;/code&gt; folder for it to work.&lt;/p&gt;
+&lt;p&gt;ok future stuff: enable docsearch (&lt;a href=&#34;https://daattali.gitbooks.io/stat545-ubc-github-io/bit003_api-key-env-var.html&#34; class=&#34;uri&#34;&gt;https://daattali.gitbooks.io/stat545-ubc-github-io/bit003_api-key-env-var.html&lt;/a&gt;) like nick tierney - &lt;code&gt;pkgdown::build_site()&lt;/code&gt;&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Big Magic with R - Ingredient 2: Enchantment</title>
+      <link>/post/bigmagic-enchantment/</link>
+      <pubDate>Tue, 05 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/bigmagic-enchantment/</guid>
+      <description>&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/GGvczm6yKd8BO/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/TxzruGOmY5LsA/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/lUaARWgKvMxEs/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“I do think that just because something is mystical doesn’t mean it shouldn’t also be demystified.” – &lt;a href=&#34;https://onbeing.org/programs/elizabeth-gilbert-choosing-curiosity-over-fear/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Last week, I presented a keynote at the &lt;a href=&#34;https://cascadiarconf.com/agenda/&#34;&gt;Cascadia 2018 R Conference&lt;/a&gt; called “Big Magic with R: Creative Learning Beyond Fear”. In it, I talked about learning R- whether you are a beginner and just started to learn R, or whether you are an advanced user and need to learn new things in R every day. If you want to see the slides, they are &lt;a href=&#34;http://bit.ly/cascadiarconf18-magic&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For my talk, I was inspired by the book &lt;a href=&#34;https://www.elizabethgilbert.com&#34;&gt;“Big Magic: Creative Living Beyond Fear”&lt;/a&gt; by Elizabeth Gilbert. In it, Elizabeth argues that there are five essential ingredients needed to live creatively, and they are:&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-ingredients.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;In my talk, I argued that these same five essential ingredients are needed to creatively learn R, and I talked about why these elements are also essential for advanced users to take their R skills to the next level. So, practical big magic. In this series of blog posts, I wanted to present each of these five ingredients and provide some more context beyond the slides.&lt;/p&gt;
+&lt;div id=&#34;courage&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Courage&lt;/h1&gt;
+&lt;p&gt;What does courage have to do with learning R or learning new things in R?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Have the courage to do what you need to do before you are FORCED to do it.” – &lt;a href=&#34;https://www.elizabethgilbert.com/thought-of-the-day-have-the-courage-to-do-what-you-need-to-do-before-you-are-f/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;My own personal anecdote is that I had been learning R for about a year, when my colleague threw a new challenge at me that I &lt;em&gt;could&lt;/em&gt; have solved using R. We were working together on a book chapter on epidemiology and autism, and he is constantly touring the world presenting on this topic. Based on conversations with other researchers, he created &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#6&#34;&gt;some visualizations&lt;/a&gt; to highlight specific issues he noticed were hard to talk about without a picture. The message seemed to be more impactful with a graphic, rather than when he tried to just talk about it in words. The slides he shared with me were data visualizations, but involved hypothetical data to demonstrate important concepts (concepts for which “real” data don’t exist- that is actually one point of these visualizations). At the time, I had a feeling that I &lt;em&gt;could&lt;/em&gt; have solved this problem using &lt;code&gt;ggplot2&lt;/code&gt;, but we only had a week to submit the draft of our book chapter to the publisher. I ended up making a new graphic that was a &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#18&#34;&gt;total abomination&lt;/a&gt;- I continue to be &lt;a href=&#34;https://github.com/apreshill/ohsu-biodatavis/commit/7a0e1b80248b30d1b5fc62ecf6c0cb2d839ecbdb&#34;&gt;horrified&lt;/a&gt; by it and remain concerned that the dataviz powers that be will revoke my &lt;a href=&#34;https://apreshill.github.io/data-vis-labs-2018/&#34;&gt;dataviz teaching license&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;What is the lesson here? I knew I needed to learn &lt;code&gt;ggplot2&lt;/code&gt; long before this challenge was presented to me, and I wish I had had the courage to learn it myself. Why didn’t I learn it before? Because reasons. I’m sure there were some. I honestly don’t know what they were now, but I do know I thought I would get to it at some point, and it just didn’t happen.&lt;/p&gt;
+&lt;p&gt;After this experience, I vowed that I would not let my lack of technical knowledge force me to submit knowingly sub-par work again. So I learned &lt;code&gt;ggplot2&lt;/code&gt;. I learned to love &lt;code&gt;ggplot2&lt;/code&gt;. And I circled back to that damn plot and made it so much &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#51&#34;&gt;better&lt;/a&gt; that I am actually proud to &lt;a href=&#34;https://alison.rbind.io/talk/ohsu-biodatavis/&#34;&gt;talk&lt;/a&gt; about it now.&lt;/p&gt;
+&lt;p&gt;This is why courage is important: it is taking the first step to being kind to yourself as a new learner. It is acknowledging that you are human, and that you have a life outside of &lt;em&gt;learning this new thing&lt;/em&gt; (a job, kids, hobbies, friends, family, etc). Courage is a big word, but it doesn’t have to be. To me, courage is a plan. This is practical courage. Making a plan for your own learning respects all of you, not just work you.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;forms-of-courage&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Forms of Courage&lt;/h1&gt;
+&lt;div id=&#34;collective-courage&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Collective courage&lt;/h2&gt;
+&lt;p&gt;Throughout most of your child, adolescent, and adult learning experiences, it is likely that a lot of the courage gathering was done for you. A great example of this is the classic syllabus. A good one will lay out the necessary elements:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What should you be able to do at the end that you don’t already know how to do? (learning objectives)&lt;/li&gt;
+&lt;li&gt;How much time should you expect to spend on learning in/out of class? (time commitment)&lt;/li&gt;
+&lt;li&gt;What topics will you learn, and in what order? (scoping + sequencing)&lt;/li&gt;
+&lt;li&gt;What materials are needed outside of attending class? How much do they cost? (textbook, online materials, etc.)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;independent-courage&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Independent courage&lt;/h2&gt;
+&lt;p&gt;If you are a self-directed learner, you’ll need to gather your own courage. You can’t just declare that you are going to learn R, or learn to do deep learning in R without figuring out where to start. I recommend thinking about the same things as should go into a good course syllabus:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What new thing do you want to learn?&lt;/li&gt;
+&lt;li&gt;How much time do you need?&lt;/li&gt;
+&lt;li&gt;What comes first, second, third, etc?&lt;/li&gt;
+&lt;li&gt;What resources will you use? How much do they cost?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-tidycourage.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-pipeline.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-pipeline-courage.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;changing-plans&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Changing Plans&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“You can measure your worth by your dedication to your path, not by your successes or failures.” ― Elizabeth Gilbert, Big Magic: Creative Living Beyond Fear&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Let your plan evolve. That is a sign that you are learning. Think of it like a dynamic document. Figure out that you missed a key package you needed to learn? Add it! Decide that you wrongly eschewed the tidyverse? It’s not too late! Realize that in order to learn &lt;code&gt;purrr&lt;/code&gt; you need to understand lists? Make a plan to fill in that knowledge gap!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;courage-is-contagious&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Courage is Contagious&lt;/h1&gt;
+&lt;p&gt;Remember: &amp;gt; “Our fear is contagious, but our courage also is. And our courage makes other people be able to be more brave, and come out of their houses, and come out of their shells, and out of their fear.” ― &lt;a href=&#34;https://onbeing.org/programs/elizabeth-gilbert-choosing-curiosity-over-fear/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;div id=&#34;on-fear&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;On Fear&lt;/h2&gt;
+&lt;p&gt;I know the word “fear” was in the title of my talk, but I didn’t talk about it. Largely because it is sort of irrelevant. I do sometimes have learners tell me they are scared to learn or try R. I think that is fine. It’s also fine if you aren’t scared. Either way, I offer this advice:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Your fear must be kept in its place. (True emergencies only, please.) Your fear must not be allowed to make decisions about creativity, passion, inspiration, dreams. Your fear doesn’t understand these things, and so it makes the most boring possible decisions about them.” – &lt;a href=&#34;https://www.elizabethgilbert.com/your-fear-is-boring-i-can-say-this-with-all-honesty-and-authority-because-i-k/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So, onward :)&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Big Magic with R - Ingredient 1: Courage</title>
+      <link>/post/bigmagic-courage/</link>
+      <pubDate>Sun, 03 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/bigmagic-courage/</guid>
+      <description>&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/d1RzoaNPQDjQQ/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div id=&#34;creative-learning-beyond-fear&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Creative Learning Beyond Fear&lt;/h1&gt;
+&lt;p&gt;Last week, I presented a keynote at the &lt;a href=&#34;https://cascadiarconf.com/agenda/&#34;&gt;Cascadia 2018 R Conference&lt;/a&gt; called &lt;a href=&#34;http://bit.ly/cascadiarconf18-magic&#34;&gt;“Big Magic with R: Creative Learning Beyond Fear”&lt;/a&gt;. For this talk, I was inspired by the book &lt;a href=&#34;https://www.elizabethgilbert.com&#34;&gt;“Big Magic: Creative Living Beyond Fear”&lt;/a&gt; by Elizabeth Gilbert. In it, Elizabeth argues that there are five essential ingredients needed to live creatively, and they are: courage, enchantment, permission, persistence, and trust. I argued that these same five essential ingredients are needed to creatively learn R, and I talked about why these elements are also essential for advanced users to take their R skills to the next level. If you want to see the slides, they are &lt;a href=&#34;http://bit.ly/cascadiarconf18-magic&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In this series of blog posts, I wanted to sketch out more of my thoughts on the five ingredients, after teaching myself R in 2010 (read: no bootcamps, workshops, or formal courses using R) and after six years of teaching over 100 Masters and PhD students from programming and non-programming backgrounds. My idea was to try to demystify how we all learn R- whether you are a beginner and just started to learn R, or whether you are an advanced user and need to learn new things in R every day.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/U5Zu7wx2MBK5W/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;courage&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Courage&lt;/h1&gt;
+&lt;p&gt;What does courage have to do with learning R or learning new things in R?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Have the courage to do what you need to do before you are FORCED to do it.” – &lt;a href=&#34;https://www.elizabethgilbert.com/thought-of-the-day-have-the-courage-to-do-what-you-need-to-do-before-you-are-f/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Courage is having a plan. What goes into a plan? Read &lt;a href=&#34;https://www.datacamp.com/community/blog/5-pieces-advice-datacamp-subscribers&#34;&gt;advice&lt;/a&gt; from DataCamp users about this (see “Make a Plan” and “Be Consistent”).&lt;/p&gt;
+&lt;p&gt;My own cowardly story is that I had been learning R for about a year, when my colleague threw a new challenge at me that I &lt;em&gt;could&lt;/em&gt; have solved using R. We were working together on a &lt;a href=&#34;https://alison.rbind.io/publication/2014-handbook/&#34;&gt;book chapter on epidemiology and autism&lt;/a&gt;, and he is constantly touring the world presenting on this topic. Based on conversations with other researchers, he created &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#6&#34;&gt;some visualizations&lt;/a&gt; to highlight specific issues he noticed were hard to talk about without a picture. The message seemed to be more impactful with a graphic, rather than when he tried to just talk about it in words. The slides he shared with me were data visualizations, but involved hypothetical data to demonstrate important concepts (concepts for which “real” data don’t exist- that is actually one point of these visualizations). At the time, I had a feeling that I &lt;em&gt;could&lt;/em&gt; have solved this problem using &lt;code&gt;ggplot2&lt;/code&gt;, but we only had a week to submit the draft of our book chapter to the publisher. I ended up making a new graphic that was a &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#18&#34;&gt;total abomination&lt;/a&gt;- I continue to be &lt;a href=&#34;https://github.com/apreshill/ohsu-biodatavis/commit/7a0e1b80248b30d1b5fc62ecf6c0cb2d839ecbdb&#34;&gt;horrified&lt;/a&gt; by it and remain concerned that the dataviz powers that be will revoke my &lt;a href=&#34;https://apreshill.github.io/data-vis-labs-2018/&#34;&gt;dataviz teaching license&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;What is the lesson here? I knew I needed to learn &lt;code&gt;ggplot2&lt;/code&gt; long before this challenge was presented to me, and I wish I had had the courage to learn it myself. Why didn’t I learn it before? Because reasons. I’m sure there were some. I honestly don’t know what they were now, but I do know I thought I would get to it at some point, and it just didn’t happen.&lt;/p&gt;
+&lt;p&gt;After this experience, I vowed that I would not let my lack of technical knowledge force me to submit knowingly sub-par work again. So I learned &lt;code&gt;ggplot2&lt;/code&gt;. I learned to love &lt;code&gt;ggplot2&lt;/code&gt;. And I circled back to that damn plot and made it so much &lt;a href=&#34;https://apreshill.github.io/ohsu-biodatavis/slides.html#51&#34;&gt;better&lt;/a&gt; that I am actually proud to &lt;a href=&#34;https://alison.rbind.io/talk/ohsu-biodatavis/&#34;&gt;talk&lt;/a&gt; about it now.&lt;/p&gt;
+&lt;p&gt;This is why courage is important: it is taking the first step to being kind to yourself as a new learner. It is acknowledging that you are human, and that you have a life outside of &lt;em&gt;learning this new thing&lt;/em&gt; (a job, kids, hobbies, friends, family, etc). Courage is a big word, but it doesn’t have to be. To me, courage is a plan. This is practical courage. Making a plan for your own learning respects all of you, not just work you.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;forms-of-courage&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Forms of Courage&lt;/h1&gt;
+&lt;div id=&#34;collective-courage&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Collective courage&lt;/h2&gt;
+&lt;p&gt;Throughout most of your child, adolescent, and adult learning experiences, it is likely that a lot of the courage gathering was done for you. A great example of this is the classic syllabus. A good one will lay out the necessary elements:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What should you be able to do at the end that you don’t already know how to do? (learning objectives)&lt;/li&gt;
+&lt;li&gt;How much time should you expect to spend on learning in/out of class? (time commitment)&lt;/li&gt;
+&lt;li&gt;What topics will you learn, and in what order? (scoping + sequencing)&lt;/li&gt;
+&lt;li&gt;What materials are needed outside of attending class? How much do they cost? (textbook, online materials, etc.)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So likely someone else already did a lot of the planning for you. Although the quality of syllabi vary a lot, some kind of plan is critical for learning anything new.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;independent-courage&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Independent courage&lt;/h2&gt;
+&lt;p&gt;If you are a self-directed learner, you’ll need to gather your own courage. You can’t just declare that you are going to learn R, or learn to do deep learning in R without figuring out where to start. I recommend thinking about the same things as should go into a good course syllabus:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;What new thing do you want to learn?&lt;/li&gt;
+&lt;li&gt;How much time do you need?&lt;/li&gt;
+&lt;li&gt;What comes first, second, third, etc?&lt;/li&gt;
+&lt;li&gt;What resources will you use? How much do they cost?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;practical-courage&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Practical Courage&lt;/h1&gt;
+&lt;div id=&#34;the-tidy-kind&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;The Tidy Kind&lt;/h2&gt;
+&lt;p&gt;For most beginner R users, I recommend to start with the &lt;a href=&#34;https://www.tidyverse.org&#34;&gt;“tidyverse”&lt;/a&gt;, which is an ecosystem of packages that share a common design philosophy, format, and syntax. I’m definitely not the first or only teacher to say to start here- you can read a more thorough explanation of the reasons from David Robinson in his blog post &lt;a href=&#34;http://varianceexplained.org/r/teach-tidyverse/&#34;&gt;“Teach the Tidyverse to Beginners”&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;But the &lt;code&gt;tidyverse&lt;/code&gt; name itself should tell you that it is BIG. As in, multiple packages, each designed for specific kinds of data science tasks and workflows. My recommended resources to start with are two free online books (both are written in &lt;a href=&#34;https://rmarkdown.rstudio.com&#34;&gt;R Markdown&lt;/a&gt; using the &lt;a href=&#34;https://bookdown.org&#34;&gt;&lt;code&gt;bookdown&lt;/code&gt; package&lt;/a&gt;!):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://r4ds.had.co.nz&#34;&gt;R for Data Science&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.google.com/forms/d/e/1FAIpQLSeT3zfzjWxoaQ6RmUEdT9n0xtvkuSaMeBetDQLpzNJvGUB6IQ/viewform&#34;&gt;Sign up for the R4DS Learning Slack&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://moderndive.com&#34;&gt;Modern Dive&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://moderndive.slack.com/join/invite/enQtMzI3NDQzNzUxMjY0LTRiNmM2OGMzMjIyOTQ1YmU5ZmE5NWY1YTU2YzA3MTJlODcxOWFiYTMzYzlkMTVlNjEzMTlkMWJjYWM4YmQ0ZDA&#34;&gt;Sign up for the Modern Dive Slack&lt;/a&gt; &lt;img src=&#34;/img/magic-tidycourage.png&#34; /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I recommend both books- they are free and have nice complimentary content. &lt;a href=&#34;http://moderndive.com&#34;&gt;Modern Dive&lt;/a&gt; offers more depth into statistics, whereas &lt;a href=&#34;http://r4ds.had.co.nz&#34;&gt;R for Data Science&lt;/a&gt; offers more breadth in terms of &lt;code&gt;tidyverse&lt;/code&gt; packages.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;the-basic-kind&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;The Basic Kind&lt;/h2&gt;
+&lt;p&gt;If you are either &lt;code&gt;tidyverse&lt;/code&gt; fluent and want to level up your base R knowledge, or you are deciding to throw caution to the wind and bypass the &lt;code&gt;tidyverse&lt;/code&gt; altogether, I have a few book recommendations for you. They are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/Art-Programming-Statistical-Software-Design/dp/1593273843/ref=sr_1_4?s=books&amp;amp;ie=UTF8&amp;amp;qid=1528176144&amp;amp;sr=1-4&amp;amp;keywords=art+of+r+programming&#34;&gt;The Art of R Programming&lt;/a&gt; by Norm Matloff&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.com/Book-First-Course-Programming-Statistics/dp/1593276516/ref=sr_1_1?ie=UTF8&amp;amp;qid=1528176099&amp;amp;sr=8-1&amp;amp;keywords=the+book+of+r&#34;&gt;The Book of R&lt;/a&gt; by Tilman Davies&lt;/li&gt;
+&lt;li&gt;Edited to add later: &lt;a href=&#34;https://www.amazon.com/Everyone-Advanced-Analytics-Graphics-Addison-Wesley/dp/013454692X/ref=sr_1_1_sspa?s=books&amp;amp;ie=UTF8&amp;amp;qid=1528176144&amp;amp;sr=1-1-spons&amp;amp;keywords=art+of+r+programming&amp;amp;psc=1&#34;&gt;R for Everyone&lt;/a&gt; by Jared Lander (includes some &lt;code&gt;tidyverse&lt;/code&gt;, no personal experience with this one)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-basecourage.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;all-purpose-courage&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;All-purpose Courage&lt;/h2&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;When I try to become acquainted with a new (to me) &lt;a href=&#34;https://twitter.com/hashtag/rstats?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#rstats&lt;/a&gt; package, I prefer to read ___________&lt;/p&gt;&amp;mdash; Jonathan Carroll (@carroll_jono) &lt;a href=&#34;https://twitter.com/carroll_jono/status/969442252610191361?ref_src=twsrc%5Etfw&#34;&gt;March 2, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-pipeline.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/magic-pipeline-courage.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;courage-a-plan&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Courage = A Plan&lt;/h1&gt;
+&lt;p&gt;A great example from my dear friend &lt;a href=&#34;https://twitter.com/cantabile&#34;&gt;Charles T. Gray&lt;/a&gt; when she planned to learn &lt;code&gt;blogdown&lt;/code&gt;:&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;W00t I can write posts and see them locally served :) progress was made, thanks to &lt;a href=&#34;https://twitter.com/apreshill?ref_src=twsrc%5Etfw&#34;&gt;@apreshill&lt;/a&gt;&amp;#39;s post &lt;a href=&#34;https://t.co/vSeH9c5yNh&#34;&gt;pic.twitter.com/vSeH9c5yNh&lt;/a&gt;&lt;/p&gt;&amp;mdash; Charles T. Gray (@cantabile) &lt;a href=&#34;https://twitter.com/cantabile/status/1002070627174395904?ref_src=twsrc%5Etfw&#34;&gt;May 31, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;Another nice example comes from &lt;a href=&#34;https://twitter.com/mjhendrickson&#34;&gt;Matthew Hendrickson&lt;/a&gt; who has shared his own “learning plan” for learning R on &lt;a href=&#34;https://github.com/mjhendrickson/Learning-R/wiki/01.-Learning-Plan&#34;&gt;GitHub&lt;/a&gt;:&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;Learning by doing - learning &lt;a href=&#34;https://twitter.com/hashtag/rstats?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#rstats&lt;/a&gt; with &lt;a href=&#34;https://twitter.com/rstudio?ref_src=twsrc%5Etfw&#34;&gt;@rstudio&lt;/a&gt; and tracking my progress on &lt;a href=&#34;https://twitter.com/github?ref_src=twsrc%5Etfw&#34;&gt;@github&lt;/a&gt;. Follow along here:&lt;a href=&#34;https://t.co/sBofj9IDbi&#34;&gt;https://t.co/sBofj9IDbi&lt;/a&gt;&lt;/p&gt;&amp;mdash; Matthew Hendrickson (@mjhendrickson) &lt;a href=&#34;https://twitter.com/mjhendrickson/status/965397995859607554?ref_src=twsrc%5Etfw&#34;&gt;February 19, 2018&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;changing-plans&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Changing Plans&lt;/h2&gt;
+&lt;p&gt;Let your plan evolve. That is a sign that you are learning. Think of it like a dynamic document. Figure out that you missed a key package you needed to learn? Add it! Decide that you wrongly eschewed the tidyverse? It’s not too late! Realize that in order to learn &lt;code&gt;purrr&lt;/code&gt; you need to understand lists? Make a plan to fill in that knowledge gap!&lt;/p&gt;
+&lt;p&gt;Remember:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“You can measure your worth by your dedication to your path, not by your successes or failures.” ― Elizabeth Gilbert, Big Magic: Creative Living Beyond Fear&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/div&gt;
+&lt;div id=&#34;courage-is-contagious&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Courage is Contagious&lt;/h2&gt;
+&lt;p&gt;Although the word “fear” was in the title of my talk, I didn’t say a word about it. Largely because it is irrelevant. I do sometimes hear learners say they are scared to learn or try R. I think that is fine. It’s also fine if you aren’t scared. Either way, I offer this advice:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Your fear must be kept in its place. (True emergencies only, please.) Your fear must not be allowed to make decisions about creativity, passion, inspiration, dreams. Your fear doesn’t understand these things, and so it makes the most boring possible decisions about them.” – &lt;a href=&#34;https://www.elizabethgilbert.com/your-fear-is-boring-i-can-say-this-with-all-honesty-and-authority-because-i-k/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Remember:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Our fear is contagious, but our courage also is. And our courage makes other people be able to be more brave, and come out of their houses, and come out of their shells, and out of their fear.” – &lt;a href=&#34;https://onbeing.org/programs/elizabeth-gilbert-choosing-curiosity-over-fear/&#34;&gt;Elizabeth Gilbert&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So, onward :) Next up- enchantment!&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/cr4Ahnng0EcfK/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Big Magic with R: Creative Learning Beyond Fear</title>
+      <link>/talk/cascadia-r-keynote/</link>
+      <pubDate>Sat, 02 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/talk/cascadia-r-keynote/</guid>
+      <description>&lt;p&gt;Inspired by the book “Big Magic: Creative Living Beyond Fear” by Elizabeth Gilbert, Alison will talk about the five essential ingredients needed to creatively learn R and why these elements are also essential for advanced users to take their R skills to the next level. You will hear practical advice for when, where, and how to start a project in R, and how your learning can add value- both to your own knowledge and to contribute to the larger community of R learners. Along the way, she will share recommended resources and evidence-based strategies for project-based learning. Alison’s background working with both new and advanced R users gives her a unique perspective on this topic.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Tame versus Tidy Data</title>
+      <link>/post/tame-data/</link>
+      <pubDate>Tue, 08 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/tame-data/</guid>
+      <description>&lt;p&gt;Define tame data based on: 1. Column types are cast 1. Column names are sane 1. Missing values are &lt;code&gt;NA&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Tame data is a pre-requisite for tidy data. Tame before tidy.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Writing A Plot-Through</title>
+      <link>/post/writing-a-plot-through/</link>
+      <pubDate>Tue, 08 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/writing-a-plot-through/</guid>
+      <description>&lt;p&gt;making that one plot taught me a lot ;)&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Take a Sad Plot &amp; Make It Better</title>
+      <link>/talk/ohsu-biodatavis/</link>
+      <pubDate>Fri, 06 Apr 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/talk/ohsu-biodatavis/</guid>
+      <description>&lt;p&gt;Join us on April 6 for a walk-through of how to take a sad plot and make it better by Alison Hill, who co-teaches the CS631 Data Visualization course. Alison will take us through one plot’s life cycle, from a sad Powerpoint slide to an Excel chart and finally to the finished product made with the ggplot2 package in R. We will discuss why each version of the plot fails in different ways, how each iteration improved on the last one, and which data visualization principles are at work in the final plot to communicate a clear scientific story.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://apreshill.github.io/ohsu-biodatavis/slides_files/figure-html/animated.gif&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Following this, Eric Earl (Senior RA in the DCAN Labs) will show a case study of visualization in neuroimaging research.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Grading Grown-ups</title>
+      <link>/post/self-assessments/</link>
+      <pubDate>Mon, 12 Mar 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/self-assessments/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Elaborative interrogation&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Self-explanation&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;Resources
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.indiana.edu/~pcl/rgoldsto/courses/dunloskyimprovinglearning.pdf&#34; class=&#34;uri&#34;&gt;http://www.indiana.edu/~pcl/rgoldsto/courses/dunloskyimprovinglearning.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://tguilfoyle.cmswiki.wikispaces.net/file/view/What_works,_What_doesn%27t.pdf&#34;&gt;http://tguilfoyle.cmswiki.wikispaces.net/file/view/What_works,_What_doesn%27t.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;My students wanted grades! I tried one year to use a qualitative grading scale, which resulted in mutiny. May be fine for some programs, and seemed to be OK for Ph.D. students (who don’t really care about grades in my experience) but was not OK for masters students. Why not? Possibly because many of my students are adult learners who have had jobs and are returning to school for another degree. They want to know how they are doing, and grades are typically a good way to gauge this!&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Logistics:&lt;/p&gt;
+&lt;p&gt;If knitted PDFs, do self-evaluation in different colors:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Roses are \textcolor{red}{red}, violets are \textcolor{blue}{blue}.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;renders: Roses are , violets are .&lt;/p&gt;
+&lt;p&gt;Roses are &lt;span style=&#34;color:red&#34;&gt;red&lt;/span&gt;, violets are &lt;span style=&#34;color:blue&#34;&gt;blue&lt;/span&gt;.&lt;/p&gt;
+&lt;div id=&#34;homework&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Homework&lt;/h1&gt;
+&lt;p&gt;A total of 4 homeworks will be assigned; your lowest score will be dropped at the end of the quarter. Some homeworks will require you to use R to analyze data. Although no prior R experience is required for this course, be prepared to do &lt;em&gt;a lot&lt;/em&gt; of self-guided learning. Students are expected to run R on their own computer or a computer they have plenty of access to and control over. Please attempt to do all homeworks on your own, but you may work with other students. However, you may not submit homework assignments as a group. You should submit your own original work. Please bear in mind that when a homework involves R, you will lose points for any of the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Printing entire dataframes in the R Markdown file&lt;/li&gt;
+&lt;li&gt;Code with no comments&lt;/li&gt;
+&lt;li&gt;Code which produces an error message&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You will have 1 week to complete each homework assignment, and your initial solutions must be submitted to Sakai by 2pm on the due date (at the start of class on Thursdays). Late homeworks will not be accepted.&lt;/p&gt;
+&lt;div id=&#34;homework-self-assessment&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Homework self-assessment&lt;/h2&gt;
+&lt;p&gt;After the initial solutions are due, you will be provided a solution key. Using that key, you will be asked to assess your own initial solutions for accuracy and thoroughness; where you made mistakes, you must discuss and analyze where you went wrong, and correct them without copying/pasting directly from the key (this typically means that you need to include more narrative than we provide in the key). A good self-assessment will include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Assessment of the accuracy and completeness of your “initial solutions”&lt;/li&gt;
+&lt;li&gt;Correct worked solutions with some discussion and analysis of why your initial solution was incorrect, and reflection on the source of your confusion (if you got an answer correct, this is not necessary)&lt;/li&gt;
+&lt;li&gt;Attributions as appropriate to other students who helped you, or other sources such as lecture notes, readings, online resources, etc. that helped you&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;homework-grades&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Homework grades&lt;/h2&gt;
+&lt;p&gt;Homework grades will be based on:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Was your initial solution a good faith effort?&lt;/li&gt;
+&lt;li&gt;Did you catch all of your own errors in your self-assessment?&lt;/li&gt;
+&lt;li&gt;Is your updated solution correct?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Each homework includes 3 questions, worth 5 points per question, scored as follows:&lt;/p&gt;
+&lt;p&gt;2 points for each initial solution being “in-good-faith”.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;2 (Strong attempt): answer reflects strong independent problem solving, with clearly thought out attempts to approach the problem and a diligent and honest effort to find the solution&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;1 (Weak attempt): answer reflects some attempt to approach the problem, but approach appears to be superficial and lacks depth of analysis&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;0 (No attempt)&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;3 points for the quality of the final answer / discussion.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;3 (Exceptional): answer is thorough, concise, and clearly demonstrates ability to analyze and interpret statistics as well as theoretical understanding of statistical concepts&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;2 (Adequate): answer addresses the question with moderate inaccuracies in analysis and/or interpretation, or offers a correct but incomplete answer&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;1 (Inadequate): answer attempts to address question with substantial inaccuracies in analysis and/or interpretation&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;0 (Insufficient): answer does not attempt to address question or answer is insufficient to grade&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This means that:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;You can get 100% of the points if you either:
+&lt;ul&gt;
+&lt;li&gt;Submit perfectly accurate initial solutions, or&lt;/li&gt;
+&lt;li&gt;Submit a perfectly accurate self-assessment,&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;If you simply cannot submit any homework solutions on time, after the homework due date, you will receive the solutions key and can submit a self-assessment for a max score of 60% (3 out of 5 points per problem). We feel this is fair given that:
+&lt;ul&gt;
+&lt;li&gt;You did not attempt a good faith effort, and&lt;/li&gt;
+&lt;li&gt;We will drop your lowest homework grade.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;what-is-a-good-faith-effort&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;What is a “good faith effort”?&lt;/h2&gt;
+&lt;p&gt;Simply submitting nonsense or saying “I can’t do this” for each problem will not meet our criteria for a good faith effort, because there is no attempt on your part to show us why you are struggling, what you tried but didn’t work, what specific part of the problem you got stuck on, which other examples in the text/lecture you tried to work through to get a grasp on the problem, etc. &lt;a href=&#34;#fn1&#34; class=&#34;footnoteRef&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt; The good faith effort is just that- we are interested in seeing evidence of a diligent and honest effort on your part, made with deliberate intention, to understand the problem and attempt an answer.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&#34;footnotes&#34;&gt;
+&lt;hr /&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;This is especially true if you don’t attend any office hours, post on Sakai, or otherwise seek out help &lt;em&gt;before&lt;/em&gt; the due date.&lt;a href=&#34;#fnref1&#34;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Subtyping cognitive profiles in Autism Spectrum Disorder using a random forest algorithm</title>
+      <link>/publication/2017-subtyping/</link>
+      <pubDate>Wed, 20 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/publication/2017-subtyping/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>R-Ladies presentation ninja</title>
+      <link>/post/r-ladies-slides/</link>
+      <pubDate>Mon, 18 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/r-ladies-slides/</guid>
+      <description>&lt;p&gt;So, you are doing an &lt;a href=&#34;https://rladies.org&#34;&gt;R-Ladies&lt;/a&gt; presentation…that’s awesome! &lt;img src=&#34;https://media.giphy.com/media/r9WS57qOqU1KU/giphy.gif&#34; /&gt;&lt;/p&gt;
+&lt;div id=&#34;the-short-version&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;The short version&lt;/h1&gt;
+&lt;p&gt;I made an &lt;a href=&#34;https://rladies.org&#34;&gt;R-Ladies&lt;/a&gt; theme for &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt; slides&lt;/a&gt;. My original tweet about it:&lt;/p&gt;
+&lt;blockquote class=&#34;twitter-tweet&#34;&gt;&lt;p lang=&#34;en&#34; dir=&#34;ltr&#34;&gt;if you want to use &lt;a href=&#34;https://twitter.com/xieyihui?ref_src=twsrc%5Etfw&#34;&gt;@xieyihui&lt;/a&gt;&amp;#39;s awesome &lt;a href=&#34;https://twitter.com/hashtag/xaringan?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#xaringan&lt;/a&gt; package for &lt;a href=&#34;https://twitter.com/hashtag/rstats?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#rstats&lt;/a&gt; slides but want more &lt;a href=&#34;https://twitter.com/hashtag/Rladies?src=hash&amp;amp;ref_src=twsrc%5Etfw&#34;&gt;#Rladies&lt;/a&gt; flavor, there is now a built-in theme for that (with code highlighting)! Thanks to the awesome &lt;a href=&#34;https://twitter.com/RLadiesGlobal?ref_src=twsrc%5Etfw&#34;&gt;@RLadiesGlobal&lt;/a&gt; starter kit. Update the CSS in your YAML to use  🧙🏽‍♀️🧞‍♀️ &lt;a href=&#34;https://t.co/YnlGSVAMsl&#34;&gt;pic.twitter.com/YnlGSVAMsl&lt;/a&gt;&lt;/p&gt;&amp;mdash; Alison Hill (@apreshill) &lt;a href=&#34;https://twitter.com/apreshill/status/935973869554487296?ref_src=twsrc%5Etfw&#34;&gt;November 29, 2017&lt;/a&gt;&lt;/blockquote&gt;
+&lt;script async src=&#34;https://platform.twitter.com/widgets.js&#34; charset=&#34;utf-8&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;The way to use the theme is to update the YAML like so:&lt;/p&gt;
+&lt;pre class=&#34;yaml&#34;&gt;&lt;code&gt;output:
+  xaringan::moon_reader:
+    css: [&amp;quot;default&amp;quot;, &amp;quot;rladies&amp;quot;, &amp;quot;rladies-fonts&amp;quot;]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Make sure your version of &lt;strong&gt;xaringan&lt;/strong&gt; is up-to-date.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/img/posts/rladies-slides/rladies-demo-slides.png&#34; /&gt; Below is a &lt;a href=&#34;https://alison.rbind.io/slides/rladies-demo-slides.html#1&#34;&gt;demo slide deck&lt;/a&gt; using the theme.&lt;/p&gt;
+&lt;iframe src=&#34;https://alison.rbind.io/slides/rladies-demo-slides.html#1&#34; width=&#34;672&#34; height=&#34;400px&#34;&gt;
+&lt;/iframe&gt;
+&lt;p&gt;(view the &lt;a href=&#34;https://github.com/rbind/apreshill/blob/master/static/slides/rladies-demo-slides.Rmd&#34;&gt;source .Rmd on GitHub&lt;/a&gt;)&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;the-longer-story&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;The longer story&lt;/h1&gt;
+&lt;p&gt;I recommend &lt;a href=&#34;https://yihui.name&#34;&gt;Yihui’s&lt;/a&gt; &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt; package&lt;/a&gt; for slides. This is an R package, available through GitHub, for creating slideshows with &lt;a href=&#34;https://remarkjs.com/&#34;&gt;remark.js&lt;/a&gt; through R Markdown. This means that you can:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;write all your slides in Markdown text&lt;/li&gt;
+&lt;li&gt;include chunks of R code and rendered output like plots, results, tables, etc. in your slides&lt;/li&gt;
+&lt;li&gt;use git for version control and share your GitHub repository&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This makes &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt;&lt;/a&gt; ideal for an &lt;a href=&#34;https://rladies.org&#34;&gt;R-Ladies&lt;/a&gt; presentation!&lt;a href=&#34;#fn1&#34; class=&#34;footnoteRef&#34; id=&#34;fnref1&#34;&gt;&lt;sup&gt;1&lt;/sup&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;To use the package, you’ll need the &lt;a href=&#34;https://cran.r-project.org/web/packages/devtools/index.html&#34;&gt;&lt;strong&gt;devtools&lt;/strong&gt; package&lt;/a&gt; installed so that you can use the &lt;code&gt;install_github&lt;/code&gt; function. Then do:&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;devtools::install_github(&amp;#39;yihui/xaringan&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;As Yihui points out in the documentation, if you use RStudio, you can use the menu to navigate to &lt;code&gt;File -&amp;gt; New File -&amp;gt; R Markdown -&amp;gt; From Template -&amp;gt; Ninja Presentation&lt;/code&gt;, and you will see an R Markdown example.&lt;/p&gt;
+&lt;p&gt;I first used &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt;&lt;/a&gt; a few months ago. I was working with &lt;a href=&#34;https://yihui.name&#34;&gt;Yihui&lt;/a&gt; on the &lt;a href=&#34;https://bookdown.org/yihui/blogdown/&#34;&gt;blogdown book&lt;/a&gt;, and had signed up to lead a &lt;a href=&#34;https://alison.rbind.io/talk/blogdown-meetup/&#34;&gt;workshop&lt;/a&gt; for the &lt;a href=&#34;https://www.meetup.com/portland-r-user-group/&#34;&gt;Portland R User group&lt;/a&gt;. Obviously, such a workshop could not have powerpoint slides, so it seemed like the perfect time to learn &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For my &lt;a href=&#34;https://alison.rbind.io/talk/blogdown-meetup/&#34;&gt;workshop&lt;/a&gt;, I made a simple website for the newly founded &lt;a href=&#34;https://rladies-pdx.rbind.io&#34;&gt;R-Ladies PDX&lt;/a&gt; using blogdown (Thanks to &lt;a href=&#34;https://twitter.com/mmmpork&#34;&gt;Augustina&lt;/a&gt; and &lt;a href=&#34;https://twitter.com/deekshathati&#34;&gt;Deeksha&lt;/a&gt;, our fearless organizers). So naturally, my slides needed more purple.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://media.giphy.com/media/c4PW8gc5ee9NK/giphy.gif&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;Luckily, the R-Ladies run a tight ship- they have a &lt;a href=&#34;https://github.com/rladies/starter-kit&#34;&gt;starter kit on GitHub&lt;/a&gt; that details all the pretty purples they like.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/posts/rladies-slides/rladies-palette.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;About a month after I did the &lt;a href=&#34;https://alison.rbind.io/talk/blogdown-meetup/&#34;&gt;R-Ladies blogdown workshop&lt;/a&gt;, I saw this &lt;a href=&#34;https://yihui.name/en/2017/10/xaringan-themes/&#34;&gt;blog post&lt;/a&gt; by &lt;a href=&#34;https://yihui.name&#34;&gt;Yihui&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;/img/posts/rladies-slides/yihui-xaringan-themes.png&#34; /&gt;
+
+&lt;/div&gt;
+&lt;p&gt;First, I thought this was such a cool idea and I hope more people make and submit themes. Then I realized, I had already made a theme! I submitted a pull request&lt;a href=&#34;#fn2&#34; class=&#34;footnoteRef&#34; id=&#34;fnref2&#34;&gt;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;, Yihui helped me make some edits to the CSS files to make them more parsimonious with the default theme, I electronically signed a contributor agreement, and now the theme is there for you all to enjoy and use! You use the theme by editing the YAML:&lt;/p&gt;
+&lt;pre class=&#34;yaml&#34;&gt;&lt;code&gt;output:
+  xaringan::moon_reader:
+    css: [&amp;quot;default&amp;quot;, &amp;quot;rladies&amp;quot;, &amp;quot;rladies-fonts&amp;quot;]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Some examples:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://alison.rbind.io/slides/rladies-demo-slides.html#1&#34;&gt;demo slide deck&lt;/a&gt;; &lt;a href=&#34;https://github.com/rbind/apreshill/blob/master/static/slides/rladies-demo-slides.Rmd&#34;&gt;.Rmd&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://alison.rbind.io/slides/blogdown-workshop-slides.html#1&#34;&gt;&lt;strong&gt;blogdown&lt;/strong&gt; workshop slide deck&lt;/a&gt;; &lt;a href=&#34;https://github.com/apreshill/blogdown-workshop&#34;&gt;.Rmd&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If you use the theme and you are on twitter, I’d love to see it- &lt;a href=&#34;https://twitter.com/intent/tweet?user_id=3199856542&#34;&gt;please mention me on twitter!&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Examples!&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;My blogdown workshop slides: &lt;a href=&#34;http://127.0.0.1:4321/talk/blogdown-meetup/&#34;&gt;“Up and running with blogdown”&lt;/a&gt; (view the &lt;a href=&#34;https://github.com/rbind/apreshill/blob/master/static/slides/blogdown-workshop-slides.Rmd&#34;&gt;source .Rmd on GitHub&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;iframe src=&#34;https://alison.rbind.io/slides/blogdown-workshop-slides.html#1&#34; width=&#34;672&#34; height=&#34;400px&#34;&gt;
+&lt;/iframe&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://jessicaminnier.com&#34;&gt;Jessica Minnier’s&lt;/a&gt; slides for &lt;a href=&#34;http://jminnier-talks.netlify.com/2018_02_shiny_csp/minnier_csp2018#1&#34;&gt;“Building Shiny Apps: With Great Power Comes Great Responsibility”&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;iframe src=&#34;http://jminnier-talks.netlify.com/2018_02_shiny_csp/minnier_csp2018#1&#34; width=&#34;672&#34; height=&#34;400px&#34;&gt;
+&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;div class=&#34;footnotes&#34;&gt;
+&lt;hr /&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn1&#34;&gt;&lt;p&gt;If you are new to &lt;a href=&#34;https://github.com/yihui/xaringan&#34;&gt;&lt;strong&gt;xaringan&lt;/strong&gt;&lt;/a&gt;, don’t miss the &lt;a href=&#34;https://github.com/yihui/xaringan/wiki&#34;&gt;wiki!&lt;/a&gt;&lt;a href=&#34;#fnref1&#34;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li id=&#34;fn2&#34;&gt;&lt;p&gt;Yihui’s &lt;a href=&#34;https://yihui.name/en/2017/10/xaringan-themes/&#34;&gt;technical instructions&lt;/a&gt; for contributors section of that blog post has been revised and is very detailed&lt;a href=&#34;#fnref2&#34;&gt;↩&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>blogdown: Creating Websites with R Markdown</title>
+      <link>/publication/2017-blogdown/</link>
+      <pubDate>Thu, 14 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/publication/2017-blogdown/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Labhub Workshop</title>
+      <link>/talk/labhub/</link>
+      <pubDate>Fri, 08 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/talk/labhub/</guid>
+      <description>
+&lt;figure&gt;
+    
+        &lt;img src=&#34;/img/ohsu-os-panel.png&#34; /&gt;
+    
+    
+&lt;/figure&gt;
+
+
+&lt;p&gt;The landscape of scientific communication is changing dramatically.  Diverse stakeholders, including major funders and universities are demonstrating a growing interest and investment in open scientific principles and practices.  Researchers, students, and the institutions that support them are needing to navigate new expectations, workflows, and policies against a backdrop of relatively unchanged means and measures of scientific success.&lt;/p&gt;
+
+&lt;p&gt;Sound complicated?  Join us on December 8th from 3:00 to 4:00 PM for a panel discussion with OHSU leaders and early career researchers on the evolving landscape of scientific communication.  We’ll explore the drivers behind the calls for “openness”, what this means in practice, and the real world compatibility and tensions between open science and student, researcher, and institutional success.&lt;/p&gt;
+
+&lt;p&gt;Confirmed panelists include:&lt;/p&gt;
+
+&lt;p&gt;Dr. Gary Westbrook, Vollum Institute Senior Scientist and Director of the Neuroscience Graduate Program&lt;/p&gt;
+
+&lt;p&gt;Dr. Bita Moghaddam, Chair of the Department of Behavioral Neuroscience&lt;/p&gt;
+
+&lt;p&gt;Dr. Abhinav Nellore, Assistant Professor, Biomedical Engineering and the Department of Surgery&lt;/p&gt;
+
+&lt;p&gt;Dr. Alison Hill, Associate Professor, Center for Spoken Language Understanding&lt;/p&gt;
+
+&lt;p&gt;The panel will be followed by food, drinks, and two hands on workshops from 4:00 - 5:30:&lt;/p&gt;
+
+
+&lt;figure&gt;
+    
+        &lt;img src=&#34;/img/ohsu-os-labhub-workshop.png&#34; /&gt;
+    
+    
+&lt;/figure&gt;
+
+
+&lt;p&gt;In this workshop, Dr. Alison Hill and Robin Champieux demonstrated tools and methods for building transparency within a lab, and onboarding new graduate students and postdocs. We provided a &lt;a href=&#34;https://github.com/apreshill/labhub&#34; target=&#34;_blank&#34;&gt;template GitHub repository&lt;/a&gt; and code of conduct designed to facilitate a healthy and productive learning and research environment. You are encouraged to use these tools to communicate expectations, document protocols, receive feedback, and facilitate the long-term value of students’ and trainees’ contributions.&lt;/p&gt;
+
+&lt;p&gt;Labhub is a &lt;em&gt;work in progress&lt;/em&gt;. We created &lt;a href=&#34;https://github.com/apreshill/labhub&#34; target=&#34;_blank&#34;&gt;this repository&lt;/a&gt; as an education and demonstration tool for faculty, postdocs, and students curious about how documentation, open science workflows, and tools like Github can contribute to a healthy and productive research environment. Your ideas and contributions are welcome!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Up &amp; Running with blogdown</title>
+      <link>/talk/blogdown-meetup/</link>
+      <pubDate>Thu, 14 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/talk/blogdown-meetup/</guid>
+      <description>&lt;p&gt;We will cover:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The &lt;strong&gt;blogdown&lt;/strong&gt; R package&lt;/li&gt;
+&lt;li&gt;Hugo themes&lt;/li&gt;
+&lt;li&gt;Adding content to personalize your site&lt;/li&gt;
+&lt;li&gt;Posting&lt;/li&gt;
+&lt;li&gt;Don&amp;rsquo;t want to blog? / just want to knit?&lt;/li&gt;
+&lt;li&gt;Customizing themes&lt;/li&gt;
+&lt;li&gt;Troubleshooting common problems&lt;/li&gt;
+&lt;li&gt;Deployment options and recommendations&lt;/li&gt;
+&lt;li&gt;Domain options available through RStudio/rbind&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you are planning on attending this workshop, please click on the HTML link above for how to prepare before the workshop.&lt;/p&gt;
+
+
+&lt;figure&gt;
+    
+        &lt;img src=&#34;/img/blogdown-meetup.jpg&#34; /&gt;
+    
+    
+&lt;/figure&gt;
+
+</description>
+    </item>
+    
+  </channel>
+</rss>

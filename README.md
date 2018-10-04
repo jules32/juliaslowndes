@@ -1,2 +1,0 @@
-# juliaslowndes
-Personal website
