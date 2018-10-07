@@ -36,7 +36,9 @@ weight = 1
 
 Hi, I'm Julia, or Julie, or Jules.
 
-I am a Mozilla Fellow and marine data scientist at the National Center for Ecological Analysis and Synthesis (NCEAS). As Science Program Lead for the Ocean Health Index (OHI), I work to bridge marine science, data science, open science, and management. 
+I am a Mozilla Fellow and marine data scientist.
 
-I lead open data science trainings through NCEAS, Software Carpentry, RLadies, and Eco-Data-Science. I earned my PhD from Stanford University in 2012.
+Based at the National Center for Ecological Analysis and Synthesis ([NCEAS](https://www.nceas.ucsb.edu/)), I am passionate about open data science and doing [better science in less time](http://ohi-science.org/betterscienceinlesstime/). 
+
+I work to bridge marine science, data science, open science, and management through the Ocean Health Index (OHI) project, and I also lead open data science workshops through NCEAS, [Software Carpentry](https://carpentries.org/), [RLadies](https://www.meetup.com/rladies-santa-barbara/), and [Eco-Data-Science](http://eco-data-science.github.io/). I earned my PhD from Stanford University in 2012.
 
